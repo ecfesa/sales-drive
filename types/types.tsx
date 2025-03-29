@@ -4,6 +4,7 @@ type Product = {
   price: number;
   imagePath: string;
   description: string;
+  category: Category;
 };
 
 type Sale = {
