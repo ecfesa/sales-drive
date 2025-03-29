@@ -3,12 +3,12 @@ import { StyleSheet, View } from 'react-native';
 
 import { ScreenContent } from '~/components/ScreenContent';
 
-export default function Home() {
+export default function Sales() {
   return (
     <>
-      <Stack.Screen options={{ title: 'Tab Two' }} />
+      <Stack.Screen options={{ title: 'Sales' }} />
       <View style={styles.container}>
-        <ScreenContent path="app/(tabs)/two.tsx" title="Tab Two" />
+        <ScreenContent path="app/(tabs)/sales.tsx" title="Sales" />
       </View>
     </>
   );
@@ -19,4 +19,4 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
   },
-});
+}); 
