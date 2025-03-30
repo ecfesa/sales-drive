@@ -42,8 +42,22 @@ export default function CategorySelectModal({
   };
 
   const handleAddNewCategory = () => {
-    if (newCategoryName.trim()) {
-      setNewlyAddedCategory(newCategoryName.trim());
+    const trimmedName = newCategoryName.trim();
+    if (trimmedName) {
+      // Check if category already exists
+      const existingCategory = categories.find(
+        (category) => category.name.toLowerCase() === trimmedName.toLowerCase()
+      );
+
+      if (existingCategory) {
+        // If category exists, select it instead of creating a new one
+        setSelectedCategory(existingCategory);
+        setNewlyAddedCategory(null);
+      } else {
+        // Otherwise add the new category
+        setNewlyAddedCategory(trimmedName);
+        setSelectedCategory(null);
+      }
       setNewCategoryName('');
       setNewCategoryModalVisible(false);
     }
@@ -54,14 +68,14 @@ export default function CategorySelectModal({
       // Show the newly added category with green styling and plus icon
       return (
         <TouchableOpacity
-          className="mb-2 rounded-md bg-green-500 p-3"
+          className="mb-2 rounded-md border border-dashed border-green-600 bg-green-100 p-3"
           onPress={() => {
             setSelectedCategory(null);
             setNewCategoryModalVisible(true);
           }}>
           <View className="flex-row items-center">
-            <AntDesign name="plus" size={16} color="white" />
-            <Text className="ml-2 font-medium text-white">{newlyAddedCategory}</Text>
+            <AntDesign name="plus" size={16} color="green" />
+            <Text className="ml-2 font-medium text-green-800">{newlyAddedCategory}</Text>
           </View>
         </TouchableOpacity>
       );

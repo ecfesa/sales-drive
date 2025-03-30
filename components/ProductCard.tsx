@@ -1,9 +1,8 @@
 import { AntDesign } from '@expo/vector-icons';
-import { Text, TouchableOpacity, View } from 'react-native';
-import { Image } from 'expo-image';
-import { useState, useEffect } from 'react';
+import { Image, Text, TouchableOpacity, View } from 'react-native';
 
 import { Button } from './Button';
+import mockImageMap from '../mock/images';
 
 const placeholderImage = require('../assets/placeholder_product.jpg');
 
@@ -26,24 +25,6 @@ export function ProductCard({
   onPressCard,
   onPressButton,
 }: ProductCardProps) {
-  const [imageExists, setImageExists] = useState(false);
-  const [isLoading, setIsLoading] = useState(!!image);
-
-  useEffect(() => {
-    if (image) {
-      setIsLoading(true);
-      Image.prefetch(image)
-        .then(() => {
-          setImageExists(true);
-          setIsLoading(false);
-        })
-        .catch(() => {
-          setImageExists(false);
-          setIsLoading(false);
-        });
-    }
-  }, [image]);
-
   const handlePress = () => {
     if (onPressCard) {
       onPressCard();
@@ -51,28 +32,32 @@ export function ProductCard({
   };
 
   // Use local placeholder image if image doesn't exist or is still loading
-  const imageSource = image && imageExists ? { uri: image } : placeholderImage;
+  let imageSource = placeholderImage;
+
+  if (image) {
+    if (image.startsWith('mock/')) {
+      imageSource = mockImageMap[image] || placeholderImage;
+    } else {
+      imageSource = { uri: image };
+    }
+  }
 
   return (
     <TouchableOpacity
       onPress={handlePress}
       className="h-80 overflow-hidden rounded-lg bg-white shadow-md">
       {editMode && (
-        <View className="absolute right-2 top-2 z-10 rounded-full bg-blue-500 p-1">
+        <View className="absolute right-2 top-2 z-20 rounded-full bg-blue-500 p-1">
           <AntDesign name="edit" size={16} color="white" />
         </View>
       )}
-      <Image 
-        source={imageSource} 
-        className="h-40 w-full rounded-t-lg" 
-        contentFit="cover"
-        transition={300}
+      <Image
+        source={imageSource}
+        className="h-40 w-full"
+        style={{ height: 160, width: '100%', borderTopLeftRadius: 8, borderTopRightRadius: 8 }}
+        resizeMode="cover"
+        defaultSource={placeholderImage}
       />
-      {isLoading && (
-        <View className="absolute left-0 right-0 top-0 flex h-40 items-center justify-center bg-gray-100 bg-opacity-50">
-          <Text>Loading...</Text>
-        </View>
-      )}
       <View className="flex flex-1 flex-col justify-between p-4">
         <View className="flex flex-col">
           <Text

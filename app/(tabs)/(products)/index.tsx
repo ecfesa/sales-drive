@@ -1,42 +1,21 @@
 import { useRouter } from 'expo-router';
-import { useEffect , useState } from 'react';
-import { SectionList, Text, View, FlatList, SafeAreaView } from 'react-native';
+import { useState } from 'react';
+import { SectionList, Text, View, FlatList, SafeAreaView, RefreshControl } from 'react-native';
 
 import { ProductCard } from '~/components/ProductCard';
-import { useDatabase } from '~/contexts/DatabaseContext';
 import { useProducts } from '~/contexts/ProductsContext';
-import { Category, Product } from '~/types/types';
+import { Product } from '~/types/types';
 
 export default function Home() {
   const router = useRouter();
-  const { editMode } = useProducts();
-  const { products: productsRepository, categories: categoriesRepository } = useDatabase();
+  const { editMode, productsByCategory, loading, deleteProduct, refresh } = useProducts();
+  const [refreshing, setRefreshing] = useState(false);
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      const products = await productsRepository.getAll();
-      setProducts(products);
-    };
-
-    const fetchCategories = async () => {
-      const categories = await categoriesRepository.getAll();
-      setCategories(categories);
-    };
-
-    fetchProducts();
-    fetchCategories();
-  }, []);
-
-  // Group products by category
-  const productsByCategory = categories.map((category) => {
-    return {
-      title: category.name,
-      data: [products.filter((product) => product.category.id === category.id)],
-    };
-  });
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refresh();
+    setRefreshing(false);
+  };
 
   // This render each product card
   const renderProduct = ({ item }: { item: Product }) => (
@@ -64,10 +43,20 @@ export default function Home() {
   const handleProductButtonPress = (product: Product) => {
     if (editMode) {
       console.log('Delete product:', product.id);
+      deleteProduct(product.id);
     } else {
       addToCart(product);
     }
   };
+
+  // Show loading state if data is still being fetched
+  if (loading) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center">
+        <Text className="text-4xl">Loading...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1">
@@ -75,7 +64,8 @@ export default function Home() {
         className="flex-1 p-4"
         contentContainerClassName="gap-2.5"
         sections={productsByCategory}
-        keyExtractor={(item) => item[0].id.toString()}
+        keyExtractor={(item) => item[0]?.id.toString()}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         renderItem={({ item }) => (
           <FlatList
             data={item}

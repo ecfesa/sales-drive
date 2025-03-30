@@ -1,7 +1,7 @@
 import { AntDesign } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Redirect, Stack, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Text,
   View,
@@ -14,19 +14,16 @@ import {
 
 import CategorySelectModal from '../../../../components/CategorySelectModal';
 import DescriptionEditModal from '../../../../components/DescriptionEditModal';
-import categories from '../../../../mock/categories';
-import products from '../../../../mock/products';
+import mockImageMap from '../../../../mock/images';
 import { Product, Category } from '../../../../types/types';
 
+import { useDatabase } from '~/contexts/DatabaseContext';
 import { useProducts } from '~/contexts/ProductsContext';
 
 const placeholderImage = require('../../../../assets/placeholder_product.jpg');
 
 export default function ProductDetail() {
   const { productId } = useLocalSearchParams<{ productId: string }>();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { editMode } = useProducts();
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
   const [isEditingPrice, setIsEditingPrice] = useState(false);
@@ -34,14 +31,24 @@ export default function ProductDetail() {
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [isEditingCategory, setIsEditingCategory] = useState(false);
 
-  useEffect(() => {
-    // Find the product in the mock data
-    if (productId) {
-      const foundProduct = products.find((p) => p.id === Number(productId));
-      setProduct(foundProduct || null);
-    }
-    setLoading(false);
-  }, [productId]);
+  const {
+    editMode,
+    loading,
+    updateProduct,
+    deleteProduct,
+    categories,
+    products,
+    refreshCategories,
+  } = useProducts();
+
+  const { categories: categoriesRepository } = useDatabase();
+
+  let product: Product | null = null;
+
+  // Get product from state
+  if (productId) {
+    product = products.find((p) => p.id === Number(productId)) || null;
+  }
 
   if (loading) {
     return (
@@ -54,24 +61,32 @@ export default function ProductDetail() {
   if (!product) {
     // Redirect to the products page if the product is not found
     // Happens when the product gets deleted
-    return <Redirect href="../products" withAnchor />;
+    return <Redirect href="../" withAnchor />;
   }
 
-  const imagePath = product.imagePath !== '' ? product.imagePath : placeholderImage;
+  // Determine image source using mock image logic
+  let imageSource = placeholderImage;
+  if (product.imagePath) {
+    if (product.imagePath.startsWith('mock/')) {
+      imageSource = mockImageMap[product.imagePath] || placeholderImage;
+    } else {
+      imageSource = { uri: product.imagePath };
+    }
+  }
 
-  const addToCart = () => {
-    console.log('Add to cart');
-  };
+  const addToCart = () => {};
 
-  const deleteProduct = () => {
-    console.log('Delete product:', product?.id);
+  const handleDeleteProduct = () => {
+    if (product) {
+      deleteProduct(product.id);
+    }
   };
 
   const saveProductName = () => {
     if (product) {
-      console.log('Saving product name:', editedName, 'for product ID:', product.id);
-      // Update the product name locally
-      setProduct({ ...product, name: editedName });
+      // Update the product
+      const updatedProduct = { ...product, name: editedName };
+      updateProduct(updatedProduct);
       setIsEditingName(false);
     }
   };
@@ -80,9 +95,9 @@ export default function ProductDetail() {
     if (product) {
       const numericPrice = parseFloat(editedPrice);
       if (!isNaN(numericPrice)) {
-        console.log('Saving product price:', numericPrice, 'for product ID:', product.id);
-        // Update the product price locally
-        setProduct({ ...product, price: numericPrice });
+        // Update the product
+        const updatedProduct = { ...product, price: numericPrice };
+        updateProduct(updatedProduct);
       }
       setIsEditingPrice(false);
     }
@@ -90,40 +105,59 @@ export default function ProductDetail() {
 
   const saveProductDescription = (newDescription: string) => {
     if (product) {
-      console.log('Saving product description for product ID:', product.id);
-      // Update the product description locally
-      setProduct({ ...product, description: newDescription });
+      // Update the product
+      const updatedProduct = { ...product, description: newDescription };
+      updateProduct(updatedProduct);
       setIsEditingDescription(false);
     }
   };
 
-  const saveProductCategory = (categoryOrName: Category | string) => {
+  const saveProductCategory = async (categoryOrName: Category | string) => {
     if (product) {
-      if (typeof categoryOrName === 'string') {
-        console.log('Creating new category:', categoryOrName, 'for product ID:', product.id);
-        const newCategory: Category = {
-          id: -1,
-          name: categoryOrName,
-        };
+      try {
+        let updatedProduct: Product;
 
-        setProduct({ ...product, category: newCategory });
-      } else {
-        console.log('Saving product category:', categoryOrName.name, 'for product ID:', product.id);
+        if (typeof categoryOrName === 'string') {
+          // Use the create category function from the database context
+          const newCategoryId = await categoriesRepository.create(categoryOrName);
 
-        setProduct({ ...product, category: categoryOrName });
+          // Refresh categories from the database to update the state
+          await refreshCategories();
+
+          const newCategory: Category = {
+            id: newCategoryId,
+            name: categoryOrName,
+          };
+
+          // Create updated product object
+          updatedProduct = {
+            ...product,
+            category: newCategory,
+          };
+        } else {
+          // Create updated product object with existing category
+          updatedProduct = {
+            ...product,
+            category: categoryOrName,
+          };
+        }
+
+        await updateProduct(updatedProduct);
+        setIsEditingCategory(false);
+      } catch (error) {
+        console.error('Error updating product category:', error);
       }
-      setIsEditingCategory(false);
     }
   };
 
   return (
     <>
-      <Stack.Screen options={{ title: product.name }} />
+      <Stack.Screen options={{ title: product?.name || 'Product' }} />
       <SafeAreaView className="flex-1">
         <View className="flex-1">
           {/* Product Image - top half */}
           <View className="h-1/2 w-full">
-            <Image source={imagePath} className="h-full w-full" resizeMode="cover" />
+            <Image source={imageSource} className="h-full w-full" resizeMode="cover" />
             {editMode && (
               <TouchableOpacity
                 className="absolute inset-0 flex items-center justify-center"
@@ -245,7 +279,7 @@ export default function ProductDetail() {
                 className={`w-32 justify-center rounded-r-xl border-b border-r border-t ${
                   editMode ? 'border-red-300 bg-red-100' : 'border-blue-300 bg-blue-100'
                 }`}
-                onPress={editMode ? deleteProduct : addToCart}
+                onPress={editMode ? handleDeleteProduct : addToCart}
                 disabled={false}>
                 {editMode ? (
                   <AntDesign

@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
+import { seedDatabase } from '../database/seedDatabase';
 import {
-  openDatabase,
   initDatabase,
   resetDatabase,
   ProductRepository,
@@ -25,6 +25,7 @@ interface DatabaseContextType {
     getAll: () => Promise<Product[]>;
     update: (product: Product) => Promise<void>;
     delete: (id: number) => Promise<void>;
+    getCountByCategoryId: (categoryId: number) => Promise<number>;
   };
   categories: {
     create: (name: string) => Promise<number>;
@@ -47,19 +48,21 @@ const DatabaseContext = createContext<DatabaseContextType | undefined>(undefined
 
 /**
  * Checks if the database has been initialized and initializes it if needed
+ * Also seeds the database if it's empty
  */
 const ensureDatabaseInitialized = async (): Promise<void> => {
   try {
-    const isInitialized = await AsyncStorage.getItem('databaseInitialized');
+    // Create tables
+    initDatabase();
+    await AsyncStorage.setItem('databaseInitialized', 'true');
 
-    if (isInitialized !== 'true') {
-      // Open the database connection and initialize tables
-      openDatabase();
-      initDatabase();
-      await AsyncStorage.setItem('databaseInitialized', 'true');
-    } else {
-      // Just open the connection if database was already initialized
-      openDatabase();
+    // Check if database has products
+    const products = await ProductRepository.getAll();
+
+    // If no products found, seed the database with initial data
+    if (products.length === 0) {
+      console.log('No products found in database. Seeding with initial data...');
+      await seedDatabase();
     }
   } catch (error) {
     console.error('Failed to initialize database:', error);

@@ -143,6 +143,16 @@ export const ProductRepository = {
     return result ? mapProduct(result) : null;
   },
 
+  // Get count of products by category
+  getCountByCategoryId: async (categoryId: number): Promise<number> => {
+    const database = openDatabase();
+    const result = await database.getFirstAsync<{ count: number }>(
+      'SELECT COUNT(*) AS count FROM Products WHERE categoryId = ?',
+      [categoryId]
+    );
+    return result ? result.count : 0;
+  },
+
   getAll: async (): Promise<Product[]> => {
     const database = openDatabase();
     const results = await database.getAllAsync(

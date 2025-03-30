@@ -63,7 +63,6 @@ function Header() {
 
   useEffect(() => {
     return () => {
-      console.log('unmounting header');
       if (clickTimerRef.current) {
         clearTimeout(clickTimerRef.current);
       }
