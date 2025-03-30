@@ -84,7 +84,9 @@ function Header() {
             <Text className="text-2xl">Products</Text>
           </Pressable>
           {showEditButton && (
-            <Pressable onPress={toggleEditMode} className="ml-2 flex-row items-center gap-1 w-36 px-2 py-1">
+            <Pressable
+              onPress={toggleEditMode}
+              className="ml-2 w-36 flex-row items-center gap-1 px-2 py-1">
               <AntDesign name="edit" size={16} color={editMode ? 'blue' : 'black'} />
               <Text className={editMode ? 'text-blue-500' : 'text-black'}>
                 {editMode ? 'Currently Editing' : 'Edit'}

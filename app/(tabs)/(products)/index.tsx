@@ -1,7 +1,6 @@
 import { Stack, useRouter } from 'expo-router';
 import { SectionList, Text, View, FlatList, SafeAreaView } from 'react-native';
 
-import CartButton from '~/components/CartButton';
 import { ProductCard } from '~/components/ProductCard';
 import { useProducts } from '~/contexts/ProductsContext';
 import categories from '~/mock/categories';
@@ -29,6 +28,7 @@ export default function Home() {
         price={item.price}
         image={item.imagePath}
         onPressCard={() => handlePressProduct(item)}
+        onPressButton={() => handleProductButtonPress(item)}
         editMode={editMode}
       />
     </View>
@@ -36,6 +36,18 @@ export default function Home() {
 
   const handlePressProduct = (product: Product) => {
     router.push(`/id/${product.id.toString()}`);
+  };
+
+  const addToCart = (product: Product) => {
+    console.log('Add to cart:', product.id);
+  };
+
+  const handleProductButtonPress = (product: Product) => {
+    if (editMode) {
+      console.log('Delete product:', product.id);
+    } else {
+      addToCart(product);
+    }
   };
 
   return (
@@ -62,7 +74,7 @@ export default function Home() {
         )}
         ListFooterComponent={() => (
           <Text className="mb-4 mt-6 text-center italic text-gray-500">
-            You have reached the end
+            You have reached the end :)
           </Text>
         )}
       />

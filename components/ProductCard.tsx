@@ -12,7 +12,7 @@ type ProductCardProps = {
   image?: string;
   editMode?: boolean;
   onPressCard?: () => void;
-  onPressAddToCart?: () => void;
+  onPressButton?: () => void;
 };
 
 export function ProductCard({
@@ -22,7 +22,7 @@ export function ProductCard({
   image,
   editMode = false,
   onPressCard,
-  onPressAddToCart,
+  onPressButton,
 }: ProductCardProps) {
   const handlePress = () => {
     if (onPressCard) {
@@ -55,9 +55,9 @@ export function ProductCard({
           <Text className="mt-1 font-semibold text-gray-700">${price.toFixed(2)}</Text>
         </View>
         <Button
-          title={editMode ? 'Edit Product' : 'Add to Cart'}
-          onPress={onPressAddToCart}
-          className="h-10"
+          title={editMode ? 'Delete Product' : 'Add to Cart'}
+          onPress={onPressButton}
+          className={`h-10 ${editMode ? 'bg-red-500' : ''}`}
         />
       </View>
     </TouchableOpacity>
