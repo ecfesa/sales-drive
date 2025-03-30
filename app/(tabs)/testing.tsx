@@ -1,13 +1,14 @@
- import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, Button, Alert } from 'react-native';
+
+import { seedDatabase } from '../../database/seedDatabase';
 import {
   ProductRepository,
   CategoryRepository,
   SaleRepository,
   debugDatabase,
-  resetDatabase
+  resetDatabase,
 } from '../../database/sql-implementation';
-import { seedDatabase } from '../../database/seedDatabase';
 
 const TestingScreen = () => {
   const [logs, setLogs] = useState<string[]>([]);
@@ -16,7 +17,7 @@ const TestingScreen = () => {
   const [testSaleId, setTestSaleId] = useState<number | null>(null);
 
   const addLog = (message: string) => {
-    setLogs(prev => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev]);
+    setLogs((prev) => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev]);
   };
 
   // Product CRUD Tests
@@ -28,7 +29,7 @@ const TestingScreen = () => {
         price: 99.99,
         imagePath: 'images/test.jpg',
         description: 'Test description',
-        category: { id: 1, name: 'Electronics' }
+        category: { id: 1, name: 'Electronics' },
       });
       setTestProductId(newId);
       addLog(`Product created: ${newId}`);
@@ -41,7 +42,7 @@ const TestingScreen = () => {
       await ProductRepository.update({
         ...product!,
         name: 'Updated Test Product',
-        price: 129.99
+        price: 129.99,
       });
       addLog('Product updated');
 
@@ -49,7 +50,6 @@ const TestingScreen = () => {
       await ProductRepository.delete(newId);
       addLog('Product deleted');
       setTestProductId(null);
-
     } catch (error) {
       addLog(`Product CRUD error: ${error}`);
     }
@@ -75,7 +75,6 @@ const TestingScreen = () => {
       await CategoryRepository.delete(newId);
       addLog('Category deleted');
       setTestCategoryId(null);
-
     } catch (error) {
       addLog(`Category CRUD error: ${error}`);
     }
@@ -89,8 +88,8 @@ const TestingScreen = () => {
         date: new Date().toISOString(),
         items: [
           { productId: 1, quantity: 2 },
-          { productId: 2, quantity: 1 }
-        ]
+          { productId: 2, quantity: 1 },
+        ],
       });
       setTestSaleId(newId);
       addLog(`Sale created: ${newId}`);
@@ -103,7 +102,6 @@ const TestingScreen = () => {
       await SaleRepository.delete(newId);
       addLog('Sale deleted');
       setTestSaleId(null);
-
     } catch (error) {
       addLog(`Sale CRUD error: ${error}`);
     }
@@ -177,7 +175,10 @@ const TestingScreen = () => {
       {/* Utilities */}
       <View style={{ marginBottom: 15 }}>
         <Text style={{ fontWeight: 'bold' }}>Utilities</Text>
-        <Button title="Seed Database" onPress={() => seedDatabase().then(() => addLog('Database seeded'))} />
+        <Button
+          title="Seed Database"
+          onPress={() => seedDatabase().then(() => addLog('Database seeded'))}
+        />
         <Button title="Reset Database" onPress={handleResetDatabase} />
         <Button title="Print Database" onPress={() => debugDatabase.printAllData()} />
       </View>
@@ -186,7 +187,9 @@ const TestingScreen = () => {
       <View style={{ marginTop: 20 }}>
         <Text style={{ fontWeight: 'bold' }}>Logs:</Text>
         {logs.map((log, index) => (
-          <Text key={index} style={{ fontSize: 10, color: '#666' }}>{log}</Text>
+          <Text key={index} style={{ fontSize: 10, color: '#666' }}>
+            {log}
+          </Text>
         ))}
       </View>
     </ScrollView>

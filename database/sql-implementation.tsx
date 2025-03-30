@@ -1,6 +1,6 @@
-import { openDatabaseSync, SQLTransaction, SQLResultSet } from 'expo-sqlite';
-import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system';
+import { openDatabaseSync, SQLTransaction, SQLResultSet } from 'expo-sqlite';
 
 type SQLTransactionCallback = (tx: SQLTransaction) => void;
 
@@ -8,7 +8,7 @@ type SQLTransactionCallback = (tx: SQLTransaction) => void;
  * Database connection instance
  * Uses expo-sqlite to create/open a SQLite database file named 'sales-drive.db'
  */
-var db = openDatabaseSync('sales-drive.db');
+let db = openDatabaseSync('sales-drive.db');
 
 /**
  * Completely resets the database by:
@@ -179,7 +179,9 @@ export const SaleRepository = {
 
     try {
       await db.withTransactionAsync(async () => {
-        const saleResult = await db.runAsync('INSERT INTO Sales (date) VALUES (?)', [saleData.date]);
+        const saleResult = await db.runAsync('INSERT INTO Sales (date) VALUES (?)', [
+          saleData.date,
+        ]);
         saleId = saleResult.lastInsertRowId as number;
 
         for (const item of saleData.items) {
@@ -199,7 +201,7 @@ export const SaleRepository = {
     }
   },
 
- getById: async (id: number): Promise<SaleWithProducts | null> => {
+  getById: async (id: number): Promise<SaleWithProducts | null> => {
     try {
       const saleResult = await db.getFirstAsync('SELECT * FROM Sales WHERE id = ?', [id]);
       if (!saleResult) return null;
@@ -215,7 +217,7 @@ export const SaleRepository = {
       return {
         id: saleResult.id,
         date: saleResult.date,
-        items: items.map(item => ({
+        items: items.map((item) => ({
           productId: item.productId,
           quantity: item.quantity,
           productName: item.name,
@@ -243,7 +245,7 @@ export const SaleRepository = {
           return {
             id: sale.id,
             date: sale.date,
-            items: items.map(item => ({
+            items: items.map((item) => ({
               productId: item.productId,
               quantity: item.quantity,
               productName: item.name,
@@ -292,12 +294,12 @@ const mapProduct = (result: any): Product => ({
 type SaleWithProducts = {
   id: number;
   date: string;
-  items: Array<{
+  items: {
     productId: number;
     quantity: number;
     productName: string;
     productPrice: number;
-  }>;
+  }[];
 };
 
 /**
@@ -326,7 +328,7 @@ export const debugDatabase = {
           SELECT ps.*, p.name as productName
           FROM ProductSale ps
           JOIN Products p ON ps.productId = p.id
-        `)
+        `),
       };
 
       console.log('DATABASE CONTENTS:');
@@ -337,7 +339,7 @@ export const debugDatabase = {
     } catch (error) {
       console.log('Failed to print database contents:', error);
     }
-  }
+  },
 };
 
 // Export all public types
