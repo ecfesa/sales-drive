@@ -12,8 +12,7 @@ export const unstable_settings = {
 };
 
 function Header() {
-  const { editMode, toggleEditMode } = useProducts();
-  const [showEditButton, setShowEditButton] = useState(true);
+  const { editMode, toggleEditMode, isAdminMode, setAdminMode } = useProducts();
   const [clicks, setClicks] = useState(0);
   const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -31,16 +30,15 @@ function Header() {
     }, 500);
 
     if (newClickCount >= 5) {
-      // Immediate response when reaching 5 clicks
-      const isEnablingAdmin = !showEditButton;
-      setShowEditButton(isEnablingAdmin);
+      const newAdminMode = !isAdminMode;
+      setAdminMode(newAdminMode);
 
-      if (editMode && !isEnablingAdmin) {
+      if (editMode && !newAdminMode) {
         toggleEditMode();
       }
 
       // Show toast message
-      if (isEnablingAdmin) {
+      if (newAdminMode) {
         Alert.alert('You are now an admin!', 'You can now edit the products', [
           { text: 'Nice!', onPress: () => {} },
         ]);
@@ -52,7 +50,7 @@ function Header() {
 
       setClicks(0);
 
-      // Clear the timeout as we've already handled the clicks
+      // Clear the timeout as I already handled the clicks
       if (clickTimerRef.current) {
         clearTimeout(clickTimerRef.current);
         clickTimerRef.current = null;
@@ -65,6 +63,7 @@ function Header() {
 
   useEffect(() => {
     return () => {
+      console.log('unmounting header');
       if (clickTimerRef.current) {
         clearTimeout(clickTimerRef.current);
       }
@@ -83,7 +82,7 @@ function Header() {
           <Pressable onPress={handleTitlePress}>
             <Text className="text-2xl">Products</Text>
           </Pressable>
-          {showEditButton && (
+          {isAdminMode && (
             <Pressable
               onPress={toggleEditMode}
               className="ml-2 w-36 flex-row items-center gap-1 px-2 py-1">
