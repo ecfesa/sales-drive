@@ -21,6 +21,12 @@ SalesDrive is a React Native mobile application built with Expo Router that help
 - Add new product categories on the fly
 - Delete products when needed
 
+### Admin Mode
+- **Hidden Feature**: Tap the "Products" title 5 times quickly to toggle admin mode
+- When enabled, an edit button appears allowing product modifications
+- All editing features (changing name, price, description, category) require admin mode
+- Admin mode can be disabled by tapping the "Products" title 5 times again
+
 ### Sales Tracking
 - Track sales data for all products
 - View sales history and performance metrics
@@ -70,6 +76,7 @@ This project is currently in active development. Here's what's implemented so fa
 - ✅ Product detail view
 - ✅ Product editing functionality
 - ✅ Category management
+- ✅ Admin mode with hidden activation
 - ⏳ Sales data tracking (in progress)
 - ⏳ Shopping cart functionality (in progress)
 
