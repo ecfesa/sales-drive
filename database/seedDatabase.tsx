@@ -105,9 +105,8 @@ export const seedDatabase = async () => {
     })
   ]);
 
-
     // Validate product creation
-    if (productIds.some(id => typeof id !== 'number')) {
+    if (productIds.some((id) => typeof id !== 'number')) {
       throw new Error('Invalid product IDs generated');
     }
 
@@ -142,7 +141,6 @@ export const seedDatabase = async () => {
     // ======================
     console.log('Bakery database seeded successfully!');
     console.log('Sample Sales IDs:', { sale1Id, sale2Id });
-
   } catch (error) {
     console.error('Bakery database seeding failed:', error);
     throw error;
