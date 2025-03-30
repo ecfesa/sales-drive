@@ -1,4 +1,4 @@
-import { Stack, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { SectionList, Text, View, FlatList, SafeAreaView } from 'react-native';
 
 import { ProductCard } from '~/components/ProductCard';

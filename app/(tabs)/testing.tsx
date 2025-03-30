@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, Button, Alert } from 'react-native';
+import { useState } from 'react';
+import { View, Text, ScrollView, Button } from 'react-native';
 
 import { seedDatabase } from '../../database/seedDatabase';
 import {
@@ -12,9 +12,9 @@ import {
 
 const TestingScreen = () => {
   const [logs, setLogs] = useState<string[]>([]);
-  const [testProductId, setTestProductId] = useState<number | null>(null);
-  const [testCategoryId, setTestCategoryId] = useState<number | null>(null);
-  const [testSaleId, setTestSaleId] = useState<number | null>(null);
+  const [, setTestProductId] = useState<number | null>(null);
+  const [, setTestCategoryId] = useState<number | null>(null);
+  const [, setTestSaleId] = useState<number | null>(null);
 
   const addLog = (message: string) => {
     setLogs((prev) => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev]);

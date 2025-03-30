@@ -31,6 +31,13 @@ export default function TabLayout() {
             tabBarIcon: ({ color }) => <TabBarIcon name="bar-chart" color={color} />,
           }}
         />
+        <Tabs.Screen
+          name="testing"
+          options={{
+            title: 'Testing',
+            tabBarIcon: ({ color }) => <TabBarIcon name="superpowers" color={color} />,
+          }}
+        />
       </Tabs>
     </>
   );

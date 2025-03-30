@@ -1,14 +1,42 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
-import { openDatabaseSync, SQLTransaction, SQLResultSet } from 'expo-sqlite';
+import { openDatabaseSync, SQLiteDatabase } from 'expo-sqlite';
 
-type SQLTransactionCallback = (tx: SQLTransaction) => void;
+import { Product, Category, CartItem, SaleWithProducts } from '../types/types';
+
+// Define types for database result objects
+interface CategoryResult {
+  id: number;
+  name: string;
+}
+
+interface SaleResult {
+  id: number;
+  date: string;
+}
+
+interface ProductSaleResult {
+  productId: number;
+  quantity: number;
+  name: string;
+  price: number;
+}
 
 /**
  * Database connection instance
- * Uses expo-sqlite to create/open a SQLite database file named 'sales-drive.db'
  */
-let db = openDatabaseSync('sales-drive.db');
+let db: SQLiteDatabase | null = null;
+
+/**
+ * Opens database connection if not already open
+ * @returns SQLiteDatabase instance
+ */
+export const openDatabase = (): SQLiteDatabase => {
+  if (!db) {
+    db = openDatabaseSync('sales-drive.db');
+  }
+  return db;
+};
 
 /**
  * Completely resets the database by:
@@ -19,8 +47,11 @@ let db = openDatabaseSync('sales-drive.db');
  */
 export const resetDatabase = async () => {
   try {
-    // Close existing connection
-    await db.closeAsync();
+    // Close existing connection if open
+    if (db) {
+      await db.closeAsync();
+      db = null;
+    }
 
     // Delete database file
     const dbPath = `${FileSystem.documentDirectory}SQLite/sales-drive.db`;
@@ -46,7 +77,8 @@ export const resetDatabase = async () => {
  * Runs the SQL commands to create tables if they don't exist
  */
 export const initDatabase = () => {
-  db.execSync(`
+  const database = openDatabase();
+  database.execSync(`
     CREATE TABLE IF NOT EXISTS Categories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE
@@ -90,8 +122,9 @@ export const initDatabase = () => {
 
 export const ProductRepository = {
   create: async (product: Omit<Product, 'id'>): Promise<number> => {
+    const database = openDatabase();
     const { name, price, imagePath, description, category } = product;
-    const result = await db.runAsync(
+    const result = await database.runAsync(
       'INSERT INTO Products (name, price, imagePath, description, categoryId) VALUES (?, ?, ?, ?, ?)',
       [name, price, imagePath, description, category.id]
     );
@@ -99,7 +132,8 @@ export const ProductRepository = {
   },
 
   getById: async (id: number): Promise<Product | null> => {
-    const result = await db.getFirstAsync(
+    const database = openDatabase();
+    const result = await database.getFirstAsync(
       `SELECT p.*, c.id as categoryId, c.name as categoryName
        FROM Products p
        JOIN Categories c ON p.categoryId = c.id
@@ -110,7 +144,8 @@ export const ProductRepository = {
   },
 
   getAll: async (): Promise<Product[]> => {
-    const results = await db.getAllAsync(
+    const database = openDatabase();
+    const results = await database.getAllAsync(
       `SELECT p.*, c.id as categoryId, c.name as categoryName
        FROM Products p
        JOIN Categories c ON p.categoryId = c.id`
@@ -119,15 +154,17 @@ export const ProductRepository = {
   },
 
   update: async (product: Product): Promise<void> => {
+    const database = openDatabase();
     const { id, name, price, imagePath, description, category } = product;
-    await db.runAsync(
+    await database.runAsync(
       'UPDATE Products SET name = ?, price = ?, imagePath = ?, description = ?, categoryId = ? WHERE id = ?',
       [name, price, imagePath, description, category.id, id]
     );
   },
 
   delete: async (id: number): Promise<void> => {
-    await db.runAsync('DELETE FROM Products WHERE id = ?', [id]);
+    const database = openDatabase();
+    await database.runAsync('DELETE FROM Products WHERE id = ?', [id]);
   },
 };
 
@@ -143,25 +180,36 @@ export const ProductRepository = {
 
 export const CategoryRepository = {
   create: async (name: string): Promise<number> => {
-    const result = await db.runAsync('INSERT INTO Categories (name) VALUES (?)', [name]);
+    const database = openDatabase();
+    const result = await database.runAsync('INSERT INTO Categories (name) VALUES (?)', [name]);
     return result.lastInsertRowId as number;
   },
 
   getById: async (id: number): Promise<Category | null> => {
-    const result = await db.getFirstAsync('SELECT * FROM Categories WHERE id = ?', [id]);
+    const database = openDatabase();
+    const result = await database.getFirstAsync<CategoryResult>(
+      'SELECT * FROM Categories WHERE id = ?',
+      [id]
+    );
     return result ? { id: result.id, name: result.name } : null;
   },
 
   getAll: async (): Promise<Category[]> => {
-    return await db.getAllAsync('SELECT * FROM Categories');
+    const database = openDatabase();
+    return await database.getAllAsync('SELECT * FROM Categories');
   },
 
   update: async (category: Category): Promise<void> => {
-    await db.runAsync('UPDATE Categories SET name = ? WHERE id = ?', [category.name, category.id]);
+    const database = openDatabase();
+    await database.runAsync('UPDATE Categories SET name = ? WHERE id = ?', [
+      category.name,
+      category.id,
+    ]);
   },
 
   delete: async (id: number): Promise<void> => {
-    await db.runAsync('DELETE FROM Categories WHERE id = ?', [id]);
+    const database = openDatabase();
+    await database.runAsync('DELETE FROM Categories WHERE id = ?', [id]);
   },
 };
 
@@ -175,11 +223,12 @@ export const CategoryRepository = {
  */
 export const SaleRepository = {
   create: async (saleData: { date: string; items: CartItem[] }): Promise<number> => {
-    let saleId: number;
+    const database = openDatabase();
+    let saleId = 0; // Initialize with a default value
 
     try {
-      await db.withTransactionAsync(async () => {
-        const saleResult = await db.runAsync('INSERT INTO Sales (date) VALUES (?)', [
+      await database.withTransactionAsync(async () => {
+        const saleResult = await database.runAsync('INSERT INTO Sales (date) VALUES (?)', [
           saleData.date,
         ]);
         saleId = saleResult.lastInsertRowId as number;
@@ -189,7 +238,7 @@ export const SaleRepository = {
             throw new Error(`Invalid product ID: ${item.productId}`);
           }
 
-          await db.runAsync(
+          await database.runAsync(
             'INSERT INTO ProductSale (saleId, productId, quantity) VALUES (?, ?, ?)',
             [saleId, item.productId, item.quantity]
           );
@@ -202,11 +251,15 @@ export const SaleRepository = {
   },
 
   getById: async (id: number): Promise<SaleWithProducts | null> => {
+    const database = openDatabase();
     try {
-      const saleResult = await db.getFirstAsync('SELECT * FROM Sales WHERE id = ?', [id]);
+      const saleResult = await database.getFirstAsync<SaleResult>(
+        'SELECT * FROM Sales WHERE id = ?',
+        [id]
+      );
       if (!saleResult) return null;
 
-      const items = await db.getAllAsync(
+      const items = await database.getAllAsync<ProductSaleResult>(
         `SELECT ps.productId, ps.quantity, p.name, p.price
          FROM ProductSale ps
          JOIN Products p ON ps.productId = p.id
@@ -229,12 +282,13 @@ export const SaleRepository = {
     }
   },
   getAll: async (): Promise<SaleWithProducts[]> => {
+    const database = openDatabase();
     try {
-      const sales = await db.getAllAsync('SELECT * FROM Sales ORDER BY date DESC');
+      const sales = await database.getAllAsync('SELECT * FROM Sales ORDER BY date DESC');
 
       return Promise.all(
-        sales.map(async (sale) => {
-          const items = await db.getAllAsync(
+        sales.map(async (sale: any) => {
+          const items = await database.getAllAsync(
             `SELECT ps.productId, ps.quantity, p.name, p.price
              FROM ProductSale ps
              JOIN Products p ON ps.productId = p.id
@@ -245,7 +299,7 @@ export const SaleRepository = {
           return {
             id: sale.id,
             date: sale.date,
-            items: items.map((item) => ({
+            items: items.map((item: any) => ({
               productId: item.productId,
               quantity: item.quantity,
               productName: item.name,
@@ -260,10 +314,11 @@ export const SaleRepository = {
   },
 
   delete: async (id: number): Promise<void> => {
+    const database = openDatabase();
     try {
-      await db.withTransactionAsync(async () => {
-        await db.runAsync('DELETE FROM ProductSale WHERE saleId = ?', [id]);
-        await db.runAsync('DELETE FROM Sales WHERE id = ?', [id]);
+      await database.withTransactionAsync(async () => {
+        await database.runAsync('DELETE FROM ProductSale WHERE saleId = ?', [id]);
+        await database.runAsync('DELETE FROM Sales WHERE id = ?', [id]);
       });
     } catch (error) {
       throw error;
@@ -289,42 +344,29 @@ const mapProduct = (result: any): Product => ({
 });
 
 /**
- * Type representing a sale with full product details
- */
-type SaleWithProducts = {
-  id: number;
-  date: string;
-  items: {
-    productId: number;
-    quantity: number;
-    productName: string;
-    productPrice: number;
-  }[];
-};
-
-/**
  * Debug tools for database inspection
  * Methods:
  * - printAllData: Logs complete database contents to console
  */
 export const debugDatabase = {
   printAllData: async () => {
+    const database = openDatabase();
     try {
       const data = {
-        categories: await db.getAllAsync('SELECT * FROM Categories'),
-        products: await db.getAllAsync(`
+        categories: await database.getAllAsync('SELECT * FROM Categories'),
+        products: await database.getAllAsync(`
           SELECT p.*, c.name as categoryName
           FROM Products p
           JOIN Categories c ON p.categoryId = c.id
         `),
-        sales: await db.getAllAsync(`
+        sales: await database.getAllAsync(`
           SELECT s.*,
           GROUP_CONCAT(ps.productId || ':' || ps.quantity, '; ') as items
           FROM Sales s
           LEFT JOIN ProductSale ps ON s.id = ps.saleId
           GROUP BY s.id
         `),
-        productSales: await db.getAllAsync(`
+        productSales: await database.getAllAsync(`
           SELECT ps.*, p.name as productName
           FROM ProductSale ps
           JOIN Products p ON ps.productId = p.id

@@ -1,4 +1,3 @@
-import { AntDesign } from '@expo/vector-icons';
 import React, { useState, useEffect } from 'react';
 import { Modal, Pressable, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
