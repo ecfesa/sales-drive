@@ -1,14 +1,14 @@
 import { Stack } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { Platform, StyleSheet, View } from 'react-native';
 
 import { ScreenContent } from '~/components/ScreenContent';
 
-export default function Home() {
+export default function Sales() {
   return (
     <>
-      <Stack.Screen options={{ title: 'Products' }} />
       <View style={styles.container}>
-        <ScreenContent path="app/(tabs)/index.tsx" title="Products" />
+        <ScreenContent path="app/(tabs)/sales.tsx" title="Sales" />
       </View>
     </>
   );
