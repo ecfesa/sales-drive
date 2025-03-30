@@ -150,6 +150,7 @@ export const ProductRepository = {
        FROM Products p
        JOIN Categories c ON p.categoryId = c.id`
     );
+    console.log(results);
     return results.map(mapProduct);
   },
 
@@ -281,6 +282,7 @@ export const SaleRepository = {
       throw error;
     }
   },
+
   getAll: async (): Promise<SaleWithProducts[]> => {
     const database = openDatabase();
     try {
@@ -308,6 +310,46 @@ export const SaleRepository = {
           };
         })
       );
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getDailySalesCount: async (): Promise<{ date: string; count: number }[]> => {
+    const database = openDatabase();
+    try {
+      const results = await database.getAllAsync<{ date: string; count: number }>(
+        `SELECT
+          date,
+          COUNT(id) as count
+        FROM
+          Sales
+        GROUP BY
+          date
+        ORDER BY
+          date DESC
+        LIMIT 7
+          `
+      );
+      return results;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getSalesCountByDate: async (date: string): Promise<number> => {
+    const database = openDatabase();
+    try {
+      const result = await database.getFirstAsync<{ count: number }>(
+        `SELECT
+          COUNT(id) as count
+        FROM
+          Sales
+        WHERE
+          date = ?`,
+        [date]
+      );
+      return result?.count || 0;
     } catch (error) {
       throw error;
     }
