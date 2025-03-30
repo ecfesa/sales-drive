@@ -1,7 +1,7 @@
 import { AntDesign } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Redirect, Stack, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Text,
   View,
@@ -15,14 +15,13 @@ import {
 import CategorySelectModal from '../../../../components/CategorySelectModal';
 import DescriptionEditModal from '../../../../components/DescriptionEditModal';
 import mockImageMap from '../../../../mock/images';
-import { Product, Category } from '../../../../types/types';
+import { Product, Category } from '../../../../types';
 
-import { useDatabase } from '~/contexts/DatabaseContext';
 import { useProducts } from '~/contexts/ProductsContext';
-
+import { useSalesDrive } from '~/contexts/SalesDriveContext';
 const placeholderImage = require('../../../../assets/placeholder_product.jpg');
 
-export default function ProductDetail() {
+export default function ProductDetails() {
   const { productId } = useLocalSearchParams<{ productId: string }>();
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
@@ -31,26 +30,35 @@ export default function ProductDetail() {
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [isEditingCategory, setIsEditingCategory] = useState(false);
 
+  const { editMode } = useProducts();
+
   const {
-    editMode,
-    loading,
+    products,
+    loading: initialLoading,
     updateProduct,
     deleteProduct,
-    categories,
-    products,
-    refreshCategories,
-  } = useProducts();
+    updateProductWithNewCategory,
+  } = useSalesDrive();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [product, setProduct] = useState<Product | null>(null);
 
-  const { categories: categoriesRepository } = useDatabase();
+  useEffect(() => {
+    const findProduct = async () => {
+      const product = products.find((p) => p.id === Number(productId));
+      setProduct(product || null);
+    };
+    findProduct();
+  }, [products]);
 
-  let product: Product | null = null;
+  useEffect(() => {
+    const findCategories = async () => {
+      const categories = products.map((p) => p.category);
+      setCategories(categories);
+    };
+    findCategories();
+  }, [products]);
 
-  // Get product from state
-  if (productId) {
-    product = products.find((p) => p.id === Number(productId)) || null;
-  }
-
-  if (loading) {
+  if (initialLoading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center">
         <Text className="text-4xl">Loading...</Text>
@@ -78,7 +86,7 @@ export default function ProductDetail() {
 
   const handleDeleteProduct = () => {
     if (product) {
-      deleteProduct(product.id);
+      deleteProduct(product);
     }
   };
 
@@ -114,39 +122,16 @@ export default function ProductDetail() {
 
   const saveProductCategory = async (categoryOrName: Category | string) => {
     if (product) {
-      try {
-        let updatedProduct: Product;
-
-        if (typeof categoryOrName === 'string') {
-          // Use the create category function from the database context
-          const newCategoryId = await categoriesRepository.create(categoryOrName);
-
-          // Refresh categories from the database to update the state
-          await refreshCategories();
-
-          const newCategory: Category = {
-            id: newCategoryId,
-            name: categoryOrName,
-          };
-
-          // Create updated product object
-          updatedProduct = {
-            ...product,
-            category: newCategory,
-          };
-        } else {
-          // Create updated product object with existing category
-          updatedProduct = {
-            ...product,
-            category: categoryOrName,
-          };
-        }
-
-        await updateProduct(updatedProduct);
-        setIsEditingCategory(false);
-      } catch (error) {
-        console.error('Error updating product category:', error);
+      if (typeof categoryOrName === 'string') {
+        await updateProductWithNewCategory(product, categoryOrName);
+      } else {
+        const newProduct = {
+          ...product,
+          category: categoryOrName,
+        };
+        updateProduct(newProduct);
       }
+      setIsEditingCategory(false);
     }
   };
 

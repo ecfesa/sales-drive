@@ -1,23 +1,54 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SectionList, Text, View, FlatList, SafeAreaView, RefreshControl } from 'react-native';
 
 import { ProductCard } from '~/components/ProductCard';
 import { useProducts } from '~/contexts/ProductsContext';
-import { Product } from '~/types/types';
+import { useSalesDrive } from '~/contexts/SalesDriveContext';
+import { Product } from '~/types';
 
-export default function Home() {
+// Define the section type for clarity
+type ProductSection = {
+  title: string;
+  data: Product[][];
+};
+
+export default function Products() {
   const router = useRouter();
-  const { editMode, productsByCategory, loading, deleteProduct, refresh } = useProducts();
+  const { editMode } = useProducts();
   const [refreshing, setRefreshing] = useState(false);
+
+  const { products, loading: initialLoading, deleteProduct, reloadProducts } = useSalesDrive();
+  const [productsByCategory, setProductsByCategory] = useState<ProductSection[]>([]);
+
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await refresh();
+    await reloadProducts();
     setRefreshing(false);
   };
 
-  // This render each product card
+  // Compute products by category
+  useEffect(() => {
+    const groupedProducts = products.reduce(
+      (acc, product) => {
+        const categoryName = product.category.name;
+        acc[categoryName] = [...(acc[categoryName] || []), product];
+        return acc;
+      },
+      {} as Record<string, Product[]>
+    );
+
+    // Transform into array format for SectionList
+    const sections = Object.entries(groupedProducts).map(([title, data]) => ({
+      title,
+      data: [data], // Wrap in array for our FlatList rendering approach
+    }));
+
+    setProductsByCategory(sections);
+  }, [products]);
+
+  // This renders each product card
   const renderProduct = ({ item }: { item: Product }) => (
     <View className="m-1 w-[48%]">
       <ProductCard
@@ -42,21 +73,21 @@ export default function Home() {
 
   const handleProductButtonPress = (product: Product) => {
     if (editMode) {
-      console.log('Delete product:', product.id);
-      deleteProduct(product.id);
+      deleteProduct(product);
     } else {
       addToCart(product);
     }
   };
 
   // Show loading state if data is still being fetched
-  if (loading) {
+  if (initialLoading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center">
         <Text className="text-4xl">Loading...</Text>
       </SafeAreaView>
     );
   }
+
 
   return (
     <SafeAreaView className="flex-1">
@@ -76,9 +107,9 @@ export default function Home() {
             contentContainerClassName="pb-2.5"
           />
         )}
-        renderSectionHeader={({ section: { title } }) => (
+        renderSectionHeader={({ section }) => (
           <Text className="mb-1 mt-1 rounded-lg border border-dashed border-blue-500 bg-blue-100 p-2.5 text-center text-4xl font-bold">
-            {title}
+            {section.title}
           </Text>
         )}
         ListFooterComponent={() => (

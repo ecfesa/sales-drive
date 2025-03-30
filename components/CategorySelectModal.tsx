@@ -2,7 +2,7 @@ import { AntDesign } from '@expo/vector-icons';
 import React, { useState, useEffect } from 'react';
 import { Modal, Pressable, Text, TextInput, TouchableOpacity, View, FlatList } from 'react-native';
 
-import { Category } from '../types/types';
+import { Category } from '../types';
 
 interface CategorySelectModalProps {
   visible: boolean;

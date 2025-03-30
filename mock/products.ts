@@ -1,5 +1,5 @@
 import categories from './categories';
-import { Product } from '../types/types';
+import { Product } from '../types';
 
 const products: Product[] = [
   // Electronics (Category 1)

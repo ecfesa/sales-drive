@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import { openDatabaseSync, SQLiteDatabase } from 'expo-sqlite';
 
-import { Product, Category, CartItem, SaleWithProducts } from '../types/types';
+import { Product, Category, CartItem, SaleWithProducts } from '../types';
 
 // Define types for database result objects
 interface CategoryResult {
@@ -31,7 +31,7 @@ let db: SQLiteDatabase | null = null;
  * Opens database connection if not already open
  * @returns SQLiteDatabase instance
  */
-export const openDatabase = (): SQLiteDatabase => {
+const getDatabase = (): SQLiteDatabase => {
   if (!db) {
     db = openDatabaseSync('sales-drive.db');
   }
@@ -77,7 +77,7 @@ export const resetDatabase = async () => {
  * Runs the SQL commands to create tables if they don't exist
  */
 export const initDatabase = () => {
-  const database = openDatabase();
+  const database = getDatabase();
   database.execSync(`
     CREATE TABLE IF NOT EXISTS Categories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -122,7 +122,7 @@ export const initDatabase = () => {
 
 export const ProductRepository = {
   create: async (product: Omit<Product, 'id'>): Promise<number> => {
-    const database = openDatabase();
+    const database = getDatabase();
     const { name, price, imagePath, description, category } = product;
     const result = await database.runAsync(
       'INSERT INTO Products (name, price, imagePath, description, categoryId) VALUES (?, ?, ?, ?, ?)',
@@ -132,7 +132,7 @@ export const ProductRepository = {
   },
 
   getById: async (id: number): Promise<Product | null> => {
-    const database = openDatabase();
+    const database = getDatabase();
     const result = await database.getFirstAsync(
       `SELECT p.*, c.id as categoryId, c.name as categoryName
        FROM Products p
@@ -145,7 +145,7 @@ export const ProductRepository = {
 
   // Get count of products by category
   getCountByCategoryId: async (categoryId: number): Promise<number> => {
-    const database = openDatabase();
+    const database = getDatabase();
     const result = await database.getFirstAsync<{ count: number }>(
       'SELECT COUNT(*) AS count FROM Products WHERE categoryId = ?',
       [categoryId]
@@ -154,7 +154,7 @@ export const ProductRepository = {
   },
 
   getAll: async (): Promise<Product[]> => {
-    const database = openDatabase();
+    const database = getDatabase();
     const results = await database.getAllAsync(
       `SELECT p.*, c.id as categoryId, c.name as categoryName
        FROM Products p
@@ -164,7 +164,7 @@ export const ProductRepository = {
   },
 
   update: async (product: Product): Promise<void> => {
-    const database = openDatabase();
+    const database = getDatabase();
     const { id, name, price, imagePath, description, category } = product;
     await database.runAsync(
       'UPDATE Products SET name = ?, price = ?, imagePath = ?, description = ?, categoryId = ? WHERE id = ?',
@@ -173,7 +173,7 @@ export const ProductRepository = {
   },
 
   delete: async (id: number): Promise<void> => {
-    const database = openDatabase();
+    const database = getDatabase();
     await database.runAsync('DELETE FROM Products WHERE id = ?', [id]);
   },
 };
@@ -190,13 +190,13 @@ export const ProductRepository = {
 
 export const CategoryRepository = {
   create: async (name: string): Promise<number> => {
-    const database = openDatabase();
+    const database = getDatabase();
     const result = await database.runAsync('INSERT INTO Categories (name) VALUES (?)', [name]);
     return result.lastInsertRowId as number;
   },
 
   getById: async (id: number): Promise<Category | null> => {
-    const database = openDatabase();
+    const database = getDatabase();
     const result = await database.getFirstAsync<CategoryResult>(
       'SELECT * FROM Categories WHERE id = ?',
       [id]
@@ -205,12 +205,12 @@ export const CategoryRepository = {
   },
 
   getAll: async (): Promise<Category[]> => {
-    const database = openDatabase();
+    const database = getDatabase();
     return await database.getAllAsync('SELECT * FROM Categories');
   },
 
   update: async (category: Category): Promise<void> => {
-    const database = openDatabase();
+    const database = getDatabase();
     await database.runAsync('UPDATE Categories SET name = ? WHERE id = ?', [
       category.name,
       category.id,
@@ -218,7 +218,7 @@ export const CategoryRepository = {
   },
 
   delete: async (id: number): Promise<void> => {
-    const database = openDatabase();
+    const database = getDatabase();
     await database.runAsync('DELETE FROM Categories WHERE id = ?', [id]);
   },
 };
@@ -233,7 +233,7 @@ export const CategoryRepository = {
  */
 export const SaleRepository = {
   create: async (saleData: { date: string; items: CartItem[] }): Promise<number> => {
-    const database = openDatabase();
+    const database = getDatabase();
     let saleId = 0; // Initialize with a default value
 
     try {
@@ -261,7 +261,7 @@ export const SaleRepository = {
   },
 
   getById: async (id: number): Promise<SaleWithProducts | null> => {
-    const database = openDatabase();
+    const database = getDatabase();
     try {
       const saleResult = await database.getFirstAsync<SaleResult>(
         'SELECT * FROM Sales WHERE id = ?',
@@ -292,7 +292,7 @@ export const SaleRepository = {
     }
   },
   getAll: async (): Promise<SaleWithProducts[]> => {
-    const database = openDatabase();
+    const database = getDatabase();
     try {
       const sales = await database.getAllAsync('SELECT * FROM Sales ORDER BY date DESC');
 
@@ -324,7 +324,7 @@ export const SaleRepository = {
   },
 
   delete: async (id: number): Promise<void> => {
-    const database = openDatabase();
+    const database = getDatabase();
     try {
       await database.withTransactionAsync(async () => {
         await database.runAsync('DELETE FROM ProductSale WHERE saleId = ?', [id]);
@@ -360,7 +360,7 @@ const mapProduct = (result: any): Product => ({
  */
 export const debugDatabase = {
   printAllData: async () => {
-    const database = openDatabase();
+    const database = getDatabase();
     try {
       const data = {
         categories: await database.getAllAsync('SELECT * FROM Categories'),
