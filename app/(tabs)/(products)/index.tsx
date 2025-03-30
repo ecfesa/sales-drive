@@ -44,6 +44,13 @@ export default function Products() {
       data: [data], // Wrap in array for our FlatList rendering approach
     }));
 
+    // Sort sections alphabetically with "Uncategorized" at the top
+    sections.sort((a, b) => {
+      if (a.title === 'Uncategorized') return -1;
+      if (b.title === 'Uncategorized') return 1;
+      return a.title.localeCompare(b.title);
+    });
+
     setProductsByCategory(sections);
   }, [products]);
 
