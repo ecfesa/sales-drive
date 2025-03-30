@@ -13,19 +13,19 @@ export const unstable_settings = {
 };
 
 function Header() {
-  const { editMode, toggleEditMode } = useProducts();
+  const { editMode, toggleEditMode, setEditMode } = useProducts();
   const { isAdminMode, adminClickReceived } = useSalesDrive();
+
+  // Turn off edit mode whenever admin mode is disabled
+  useEffect(() => {
+    if (!isAdminMode) {
+      setEditMode(false);
+    }
+  }, [isAdminMode, setEditMode]);
 
   const handleTitlePress = () => {
     adminClickReceived();
   };
-
-  // Disable edit mode if admin mode is toggled off
-  useEffect(() => {
-    if (!isAdminMode) {
-      toggleEditMode();
-    }
-  }, [isAdminMode]);
 
   return (
     <ProductsProvider>
