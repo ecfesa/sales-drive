@@ -51,9 +51,16 @@ export function SalesDriveProvider({ children }: SalesDriveProviderProps) {
     };
   }, []);
 
-  const newProduct = async (product: Product) => {
+  const cleanupCategory = async (category: Category) => {
+    const categoryCount = await ProductRepository.getCountByCategoryId(category.id);
+    if (categoryCount === 0) {
+      await CategoryRepository.delete(category.id);
+    }
+  };
+
+  const newProduct = async (product: Omit<Product, 'id'>) => {
     const newProductId = await ProductRepository.create(product);
-    setProducts([...products, product]);
+    setProducts([...products, { ...product, id: newProductId }]);
     return newProductId;
   };
 
@@ -62,12 +69,10 @@ export function SalesDriveProvider({ children }: SalesDriveProviderProps) {
     // Find the product in the products array and update it
     const updatedProducts = products.map((p) => (p.id === product.id ? product : p));
     setProducts(updatedProducts);
+    cleanupCategory(product.category);
   };
 
-  const updateProductWithNewCategory = async (
-    product: Omit<Product, 'category'>,
-    categoryName: string
-  ) => {
+  const updateProductWithNewCategory = async (product: Product, categoryName: string) => {
     const newCategoryId = await CategoryRepository.create(categoryName);
     const newProduct = {
       ...product,
@@ -80,6 +85,7 @@ export function SalesDriveProvider({ children }: SalesDriveProviderProps) {
     // Find the product in the products array and update it
     const updatedProducts = products.map((p) => (p.id === newProduct.id ? newProduct : p));
     setProducts(updatedProducts);
+    cleanupCategory(product.category);
   };
 
   const getOrCreateCategory = async (categoryName: string) => {
@@ -99,6 +105,7 @@ export function SalesDriveProvider({ children }: SalesDriveProviderProps) {
   const deleteProduct = async (product: Product) => {
     await ProductRepository.delete(product.id);
     setProducts(products.filter((p) => p.id !== product.id));
+    cleanupCategory(product.category);
   };
 
   const reloadProducts = async () => {
