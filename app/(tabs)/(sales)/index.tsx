@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View, SafeAreaView, Text } from 'react-native';
 import { SalesGraph } from '~/components/SalesGraph';
+import RecentSalesList from '~/components/SalesExpansibleItem';
 import { SaleRepository } from '~/database/sql-implementation';
 
 interface DailySalesData {
@@ -43,6 +44,8 @@ export default function Sales() {
       ) : (
         <SalesGraph labels={labels} datasets={data} />
       )}
+
+      <RecentSalesList />
     </SafeAreaView>
   );
 }
