@@ -27,6 +27,11 @@ function Header() {
     adminClickReceived();
   };
 
+  const handleAddProduct = () => {
+    console.log('Add product');
+    router.push('/new');
+  };
+
   return (
     <ProductsProvider>
       <BlankHeader>
@@ -53,7 +58,16 @@ function Header() {
           </View>
         </View>
 
-        <CartButton itemCount={2} onPress={() => router.push('/cart')} />
+        {editMode ? (
+          <Pressable
+            onPress={handleAddProduct}
+            className="flex-row items-center gap-2 rounded-full border-2 border-green-600 bg-green-100 px-3 py-1 transition-opacity active:opacity-50">
+            <AntDesign name="plus" size={16} color="green" />
+            <Text className="font-medium text-green-700">Add Product</Text>
+          </Pressable>
+        ) : (
+          <CartButton itemCount={2} onPress={() => router.push('/cart')} />
+        )}
       </BlankHeader>
     </ProductsProvider>
   );

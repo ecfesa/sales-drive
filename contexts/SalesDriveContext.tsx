@@ -2,15 +2,16 @@ import { createContext, useContext, ReactNode, useState, useEffect, useRef } fro
 import { Alert } from 'react-native';
 
 import { CategoryRepository, ProductRepository } from '~/database/sql-implementation';
-import { Product } from '~/types';
+import { Product, Category } from '~/types';
 
 type SalesDriveContextType = {
   products: Product[];
   loading: boolean;
   isAdminMode: boolean;
-  newProduct: (product: Product) => void;
+  newProduct: (product: Product) => Promise<number>;
   updateProduct: (product: Product) => void;
   updateProductWithNewCategory: (product: Product, categoryName: string) => void;
+  getOrCreateCategory: (categoryName: string) => Promise<Category>;
   deleteProduct: (product: Product) => void;
   reloadProducts: () => void;
   adminClickReceived: () => void;
@@ -51,8 +52,9 @@ export function SalesDriveProvider({ children }: SalesDriveProviderProps) {
   }, []);
 
   const newProduct = async (product: Product) => {
-    await ProductRepository.create(product);
+    const newProductId = await ProductRepository.create(product);
     setProducts([...products, product]);
+    return newProductId;
   };
 
   const updateProduct = async (product: Product) => {
@@ -78,6 +80,20 @@ export function SalesDriveProvider({ children }: SalesDriveProviderProps) {
     // Find the product in the products array and update it
     const updatedProducts = products.map((p) => (p.id === newProduct.id ? newProduct : p));
     setProducts(updatedProducts);
+  };
+
+  const getOrCreateCategory = async (categoryName: string) => {
+    const category = await CategoryRepository.getByName(categoryName);
+    if (category) {
+      return category;
+    }
+
+    // Create the category
+    const newCategoryId = await CategoryRepository.create(categoryName);
+    return {
+      id: newCategoryId,
+      name: categoryName,
+    };
   };
 
   const deleteProduct = async (product: Product) => {
@@ -141,6 +157,7 @@ export function SalesDriveProvider({ children }: SalesDriveProviderProps) {
     newProduct,
     updateProduct,
     updateProductWithNewCategory,
+    getOrCreateCategory,
     deleteProduct,
     reloadProducts,
 

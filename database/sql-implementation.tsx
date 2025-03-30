@@ -204,6 +204,15 @@ export const CategoryRepository = {
     return result ? { id: result.id, name: result.name } : null;
   },
 
+  getByName: async (name: string): Promise<Category | null> => {
+    const database = getDatabase();
+    const result = await database.getFirstAsync<CategoryResult>(
+      'SELECT * FROM Categories WHERE name = ?',
+      [name]
+    );
+    return result ? { id: result.id, name: result.name } : null;
+  },
+
   getAll: async (): Promise<Category[]> => {
     const database = getDatabase();
     return await database.getAllAsync('SELECT * FROM Categories');
