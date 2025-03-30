@@ -35,7 +35,7 @@ export default function TabLayout() {
           name="testing"
           options={{
             title: 'Testing',
-            tabBarIcon: ({ color }) => <TabBarIcon name="superpowers" color={color} />,
+            tabBarIcon: ({ color }) => <TabBarIcon name="flask" color={color} />,
           }}
         />
       </Tabs>
