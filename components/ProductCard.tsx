@@ -1,5 +1,7 @@
 import { AntDesign } from '@expo/vector-icons';
-import { Image, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
+import { Image } from 'expo-image';
+import { useState, useEffect } from 'react';
 
 import { Button } from './Button';
 
@@ -24,14 +26,32 @@ export function ProductCard({
   onPressCard,
   onPressButton,
 }: ProductCardProps) {
+  const [imageExists, setImageExists] = useState(false);
+  const [isLoading, setIsLoading] = useState(!!image);
+
+  useEffect(() => {
+    if (image) {
+      setIsLoading(true);
+      Image.prefetch(image)
+        .then(() => {
+          setImageExists(true);
+          setIsLoading(false);
+        })
+        .catch(() => {
+          setImageExists(false);
+          setIsLoading(false);
+        });
+    }
+  }, [image]);
+
   const handlePress = () => {
     if (onPressCard) {
       onPressCard();
     }
   };
 
-  // Use local placeholder image
-  const imageSource = image ? { uri: image } : placeholderImage;
+  // Use local placeholder image if image doesn't exist or is still loading
+  const imageSource = image && imageExists ? { uri: image } : placeholderImage;
 
   return (
     <TouchableOpacity
@@ -42,7 +62,17 @@ export function ProductCard({
           <AntDesign name="edit" size={16} color="white" />
         </View>
       )}
-      <Image source={imageSource} className="fit h-40 w-full rounded-t-lg bg-contain" />
+      <Image 
+        source={imageSource} 
+        className="h-40 w-full rounded-t-lg" 
+        contentFit="cover"
+        transition={300}
+      />
+      {isLoading && (
+        <View className="absolute left-0 right-0 top-0 flex h-40 items-center justify-center bg-gray-100 bg-opacity-50">
+          <Text>Loading...</Text>
+        </View>
+      )}
       <View className="flex flex-1 flex-col justify-between p-4">
         <View className="flex flex-col">
           <Text

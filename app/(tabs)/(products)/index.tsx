@@ -1,15 +1,34 @@
 import { useRouter } from 'expo-router';
+import { useEffect , useState } from 'react';
 import { SectionList, Text, View, FlatList, SafeAreaView } from 'react-native';
 
 import { ProductCard } from '~/components/ProductCard';
+import { useDatabase } from '~/contexts/DatabaseContext';
 import { useProducts } from '~/contexts/ProductsContext';
-import categories from '~/mock/categories';
-import products from '~/mock/products';
-import { Product } from '~/types/types';
+import { Category, Product } from '~/types/types';
 
 export default function Home() {
   const router = useRouter();
   const { editMode } = useProducts();
+  const { products: productsRepository, categories: categoriesRepository } = useDatabase();
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const products = await productsRepository.getAll();
+      setProducts(products);
+    };
+
+    const fetchCategories = async () => {
+      const categories = await categoriesRepository.getAll();
+      setCategories(categories);
+    };
+
+    fetchProducts();
+    fetchCategories();
+  }, []);
 
   // Group products by category
   const productsByCategory = categories.map((category) => {
