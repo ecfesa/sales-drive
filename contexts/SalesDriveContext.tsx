@@ -27,7 +27,6 @@ export function SalesDriveProvider({ children }: SalesDriveProviderProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdminMode, setIsAdminMode] = useState(false);
-  
   // Click counting for admin mode
   const [clicks, setClicks] = useState(0);
   const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -42,7 +41,7 @@ export function SalesDriveProvider({ children }: SalesDriveProviderProps) {
     loadProducts();
   }, []);
 
-  // Cleanup click timer
+  // Cleanup click timer (dismount detector)
   useEffect(() => {
     return () => {
       if (clickTimerRef.current) {
@@ -58,7 +57,9 @@ export function SalesDriveProvider({ children }: SalesDriveProviderProps) {
 
   const updateProduct = async (product: Product) => {
     await ProductRepository.update(product);
-    setProducts([...products, product]);
+    // Find the product in the products array and update it
+    const updatedProducts = products.map((p) => (p.id === product.id ? product : p));
+    setProducts(updatedProducts);
   };
 
   const updateProductWithNewCategory = async (
@@ -74,7 +75,9 @@ export function SalesDriveProvider({ children }: SalesDriveProviderProps) {
       },
     };
     await ProductRepository.update(newProduct);
-    setProducts([...products, newProduct]);
+    // Find the product in the products array and update it
+    const updatedProducts = products.map((p) => (p.id === newProduct.id ? newProduct : p));
+    setProducts(updatedProducts);
   };
 
   const deleteProduct = async (product: Product) => {

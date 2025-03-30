@@ -21,7 +21,6 @@ export default function Products() {
   const { products, loading: initialLoading, deleteProduct, reloadProducts } = useSalesDrive();
   const [productsByCategory, setProductsByCategory] = useState<ProductSection[]>([]);
 
-
   const onRefresh = async () => {
     setRefreshing(true);
     await reloadProducts();
@@ -88,20 +87,17 @@ export default function Products() {
     );
   }
 
-
   return (
     <SafeAreaView className="flex-1">
       <SectionList
         className="flex-1 p-4"
         contentContainerClassName="gap-2.5"
         sections={productsByCategory}
-        keyExtractor={(item) => item[0]?.id.toString()}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         renderItem={({ item }) => (
           <FlatList
             data={item}
             renderItem={renderProduct}
-            keyExtractor={(product) => product.id.toString()}
             numColumns={2}
             columnWrapperStyle={{ justifyContent: 'space-between' }}
             contentContainerClassName="pb-2.5"

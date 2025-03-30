@@ -12,7 +12,6 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
   const [editMode, setEditMode] = useState(false);
   const toggleEditMode = () => setEditMode(!editMode);
 
-
   return (
     <ProductsContext.Provider
       value={{

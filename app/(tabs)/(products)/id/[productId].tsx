@@ -1,5 +1,7 @@
 import { AntDesign } from '@expo/vector-icons';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import * as FileSystem from 'expo-file-system';
+import * as ImagePicker from 'expo-image-picker';
 import { Redirect, Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -10,16 +12,31 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  Alert,
 } from 'react-native';
 
-import CategorySelectModal from '../../../../components/CategorySelectModal';
-import DescriptionEditModal from '../../../../components/DescriptionEditModal';
-import mockImageMap from '../../../../mock/images';
-import { Product, Category } from '../../../../types';
-
+import CategorySelectModal from '~/components/CategorySelectModal';
+import DescriptionEditModal from '~/components/DescriptionEditModal';
 import { useProducts } from '~/contexts/ProductsContext';
 import { useSalesDrive } from '~/contexts/SalesDriveContext';
-const placeholderImage = require('../../../../assets/placeholder_product.jpg');
+import mockImageMap from '~/mock/images';
+import { Product, Category } from '~/types';
+
+const placeholderImage = require('~/assets/placeholder_product.jpg');
+
+function randomString(length: number) {
+  const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz'.split('');
+
+  if (!length) {
+    length = Math.floor(Math.random() * chars.length);
+  }
+
+  let str = '';
+  for (let i = 0; i < length; i++) {
+    str += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return str;
+}
 
 export default function ProductDetails() {
   const { productId } = useLocalSearchParams<{ productId: string }>();
@@ -52,8 +69,16 @@ export default function ProductDetails() {
 
   useEffect(() => {
     const findCategories = async () => {
-      const categories = products.map((p) => p.category);
-      setCategories(categories);
+      // Use a Map to track unique categories by ID
+      const uniqueCategoriesMap = new Map();
+      products.forEach((p) => {
+        if (!uniqueCategoriesMap.has(p.category.id)) {
+          uniqueCategoriesMap.set(p.category.id, p.category);
+        }
+      });
+      // Convert Map values to array
+      const uniqueCategories = Array.from(uniqueCategoriesMap.values());
+      setCategories(uniqueCategories);
     };
     findCategories();
   }, [products]);
@@ -129,9 +154,57 @@ export default function ProductDetails() {
           ...product,
           category: categoryOrName,
         };
-        updateProduct(newProduct);
+        await updateProduct(newProduct);
       }
       setIsEditingCategory(false);
+    }
+  };
+
+  // Function to handle image editing
+  const handleEditImage = async () => {
+    try {
+      // 1. Select an image from the device library
+      const result = await ImagePicker.launchImageLibraryAsync({
+        allowsEditing: true,
+        aspect: [1, 1], // 1:1 crop aspect ratio
+        quality: 0.8,
+        base64: true, // Get base64 for hashing
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const selectedImage = result.assets[0];
+        const imageUri = selectedImage.uri;
+
+        // Create directory if it doesn't exist
+        const imageDirectory = FileSystem.documentDirectory + 'product_images/';
+        const dirInfo = await FileSystem.getInfoAsync(imageDirectory);
+
+        if (!dirInfo.exists) {
+          await FileSystem.makeDirectoryAsync(imageDirectory, { intermediates: true });
+        }
+
+        // 3. Determine destination path using product ID and random string
+        const fileName = `product_${productId}_${randomString(8)}.jpg`;
+        const destinationUri = imageDirectory + fileName;
+
+        // Copy the selected image to local file system
+        await FileSystem.copyAsync({
+          from: imageUri,
+          to: destinationUri,
+        });
+
+        // 4. Print out the path of the saved file
+        console.log('Image saved to:', destinationUri);
+
+        // Update the product with the new image path
+        if (product) {
+          const updatedProduct = { ...product, imagePath: destinationUri };
+          updateProduct(updatedProduct);
+        }
+      }
+    } catch (error) {
+      console.error('Error selecting or saving image:', error);
+      Alert.alert('Error', 'Failed to update image');
     }
   };
 
@@ -146,7 +219,7 @@ export default function ProductDetails() {
             {editMode && (
               <TouchableOpacity
                 className="absolute inset-0 flex items-center justify-center"
-                onPress={() => console.log('Edit image')}>
+                onPress={handleEditImage}>
                 <View className="absolute right-4 top-4 rounded-full bg-blue-500 p-2">
                   <AntDesign name="edit" size={20} color="white" />
                 </View>

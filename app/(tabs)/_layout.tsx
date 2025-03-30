@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 import { TabBarIcon } from '../../components/TabBarIcon';
 
 export default function TabLayout() {
+  console.log('re-rendering tab layout');
   return (
     <>
       <StatusBar
