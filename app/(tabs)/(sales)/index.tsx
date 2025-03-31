@@ -62,7 +62,7 @@ export default function Sales() {
         )}
 
         <Text className="mb-1 mt-1 rounded-lg border border-dashed border-blue-500 bg-blue-100 p-2.5 text-center text-4xl font-bold">
-          Last Five Sales
+          Last Sales
         </Text>
       </>
     ),
