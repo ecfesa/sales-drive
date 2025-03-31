@@ -15,7 +15,7 @@ type ProductSection = {
 
 export default function Products() {
   const router = useRouter();
-  const { editMode } = useProducts();
+  const { editMode, addToCart } = useProducts();
   const [refreshing, setRefreshing] = useState(false);
 
   const { products, loading: initialLoading, deleteProduct, reloadProducts } = useSalesDrive();
@@ -71,10 +71,6 @@ export default function Products() {
 
   const handlePressProduct = (product: Product) => {
     router.push(`/id/${product.id.toString()}`);
-  };
-
-  const addToCart = (product: Product) => {
-    console.log('Add to cart:', product.id);
   };
 
   const handleProductButtonPress = (product: Product) => {

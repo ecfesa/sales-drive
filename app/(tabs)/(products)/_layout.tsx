@@ -13,7 +13,7 @@ export const unstable_settings = {
 };
 
 function Header() {
-  const { editMode, toggleEditMode, setEditMode } = useProducts();
+  const { editMode, toggleEditMode, setEditMode, getCartItemCount } = useProducts();
   const { isAdminMode, adminClickReceived } = useSalesDrive();
 
   // Turn off edit mode whenever admin mode is disabled
@@ -28,7 +28,6 @@ function Header() {
   };
 
   const handleAddProduct = () => {
-    console.log('Add product');
     router.push('/new');
   };
 
@@ -66,7 +65,7 @@ function Header() {
             <Text className="font-medium text-green-700">Add Product</Text>
           </Pressable>
         ) : (
-          <CartButton itemCount={2} onPress={() => router.push('/cart')} />
+          <CartButton itemCount={getCartItemCount()} onPress={() => router.push('/cart')} />
         )}
       </BlankHeader>
     </ProductsProvider>

@@ -47,7 +47,7 @@ export default function ProductDetails() {
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [isEditingCategory, setIsEditingCategory] = useState(false);
 
-  const { editMode } = useProducts();
+  const { editMode, addToCart } = useProducts();
 
   const {
     products,
@@ -107,7 +107,11 @@ export default function ProductDetails() {
     }
   }
 
-  const addToCart = () => {};
+  const addToCartHandler = () => {
+    if (product) {
+      addToCart(product);
+    }
+  };
 
   const handleDeleteProduct = () => {
     if (product) {
@@ -163,7 +167,7 @@ export default function ProductDetails() {
   // Function to handle image editing
   const handleEditImage = async () => {
     try {
-      // 1. Select an image from the device library
+      // Select an image from the device library
       const result = await ImagePicker.launchImageLibraryAsync({
         allowsEditing: true,
         aspect: [1, 1], // 1:1 crop aspect ratio
@@ -183,7 +187,7 @@ export default function ProductDetails() {
           await FileSystem.makeDirectoryAsync(imageDirectory, { intermediates: true });
         }
 
-        // 3. Determine destination path using product ID and random string
+        // Determine destination path using product ID and random string
         const fileName = `product_${productId}_${randomString(8)}.jpg`;
         const destinationUri = imageDirectory + fileName;
 
@@ -192,9 +196,6 @@ export default function ProductDetails() {
           from: imageUri,
           to: destinationUri,
         });
-
-        // 4. Print out the path of the saved file
-        console.log('Image saved to:', destinationUri);
 
         // Update the product with the new image path
         if (product) {
@@ -337,7 +338,7 @@ export default function ProductDetails() {
                 className={`w-32 justify-center rounded-r-xl border-b border-r border-t ${
                   editMode ? 'border-red-300 bg-red-100' : 'border-blue-300 bg-blue-100'
                 }`}
-                onPress={editMode ? handleDeleteProduct : addToCart}
+                onPress={editMode ? handleDeleteProduct : addToCartHandler}
                 disabled={false}>
                 {editMode ? (
                   <AntDesign

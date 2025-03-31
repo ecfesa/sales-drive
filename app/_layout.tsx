@@ -9,7 +9,6 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  console.log('re-rendering root layout');
   return (
     <SalesDriveProvider>
       <Stack>

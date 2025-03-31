@@ -4,8 +4,11 @@ import { Platform } from 'react-native';
 
 import { TabBarIcon } from '../../components/TabBarIcon';
 
+import { useSalesDrive } from '~/contexts/SalesDriveContext';
+
 export default function TabLayout() {
-  console.log('re-rendering tab layout');
+  const { isAdminMode } = useSalesDrive();
+
   return (
     <>
       <StatusBar
@@ -37,6 +40,7 @@ export default function TabLayout() {
           options={{
             title: 'Testing',
             tabBarIcon: ({ color }) => <TabBarIcon name="flask" color={color} />,
+            href: isAdminMode ? undefined : null,
           }}
         />
       </Tabs>
