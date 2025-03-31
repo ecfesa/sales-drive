@@ -14,7 +14,7 @@ export const unstable_settings = {
 
 function Header() {
   const { editMode, toggleEditMode, setEditMode, getCartItemCount } = useProducts();
-  const { isAdminMode, adminClickReceived } = useSalesDrive();
+  const { isAdminMode, adminClickReceived, products } = useSalesDrive();
 
   // Turn off edit mode whenever admin mode is disabled
   useEffect(() => {
@@ -31,6 +31,9 @@ function Header() {
     router.push('/new');
   };
 
+  // Check if products exist
+  const hasProducts = products.length > 0;
+
   return (
     <ProductsProvider>
       <BlankHeader>
@@ -44,7 +47,7 @@ function Header() {
             <Pressable onPress={handleTitlePress}>
               <Text className="text-2xl">Products</Text>
             </Pressable>
-            {isAdminMode && (
+            {isAdminMode && hasProducts && (
               <Pressable
                 onPress={toggleEditMode}
                 className="ml-2 w-36 flex-row items-center gap-1 px-2 py-1">
