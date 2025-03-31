@@ -34,7 +34,7 @@ let isInitialized = false;
  */
 export const initDatabase = () => {
   if (isInitialized) return;
-  
+
   const database = db!;
   database.execSync(`
     CREATE TABLE IF NOT EXISTS Categories (
@@ -66,7 +66,7 @@ export const initDatabase = () => {
       FOREIGN KEY (productId) REFERENCES Products(id)
     );
   `);
-  
+
   isInitialized = true;
 };
 

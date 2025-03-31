@@ -1,6 +1,15 @@
+import { AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { SectionList, Text, View, FlatList, SafeAreaView, RefreshControl } from 'react-native';
+import {
+  SectionList,
+  Text,
+  View,
+  FlatList,
+  SafeAreaView,
+  RefreshControl,
+  Pressable,
+} from 'react-native';
 
 import { ProductCard } from '~/components/ProductCard';
 import { useProducts } from '~/contexts/ProductsContext';
@@ -80,6 +89,25 @@ export default function Products() {
       addToCart(product);
     }
   };
+
+  const handleCreateFirstProduct = () => {
+    router.push('/new');
+  };
+
+  // Show "Create first product" button when no products exist
+  if (products.length === 0) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center p-4">
+        <Text className="mb-6 text-center text-2xl">No products found</Text>
+        <Pressable
+          onPress={handleCreateFirstProduct}
+          className="flex-row items-center gap-2 rounded-full border-2 border-green-600 bg-green-100 px-5 py-3 transition-opacity active:opacity-50">
+          <AntDesign name="plus" size={20} color="green" />
+          <Text className="text-lg font-medium text-green-700">Create first product</Text>
+        </Pressable>
+      </SafeAreaView>
+    );
+  }
 
   // Show loading state if data is still being fetched
   if (initialLoading) {

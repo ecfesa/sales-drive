@@ -33,8 +33,7 @@ const SaleExpansibleItemList = ({ scrollEnabled = true }) => {
       try {
         const allSales = await SaleRepository.getAll();
         // Sort by date descending and take last 5
-        const recentSales = allSales
-        .sort((a, b) => {
+        const recentSales = allSales.sort((a, b) => {
           const dateA = new Date(a.date.split('/').reverse().join('-'));
           const dateB = new Date(b.date.split('/').reverse().join('-'));
           return dateB.getTime() - dateA.getTime();
@@ -76,9 +75,8 @@ const SaleExpansibleItemList = ({ scrollEnabled = true }) => {
     return <Text className="p-5 text-center text-red-500">Error: {error}</Text>;
   }
 
-  const renderSaleItem = ({ item, index }: { item: SaleExpansibleItemType, index: number }) => (
-    <View
-      className="mb-2 overflow-hidden rounded-lg border border-gray-200">
+  const renderSaleItem = ({ item, index }: { item: SaleExpansibleItemType; index: number }) => (
+    <View className="mb-2 overflow-hidden rounded-lg border border-gray-200">
       <TouchableOpacity
         className="bg-gray-50 p-4"
         onPress={() => handleToggle(index)}
