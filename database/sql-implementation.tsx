@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import { openDatabaseSync, SQLiteDatabase } from 'expo-sqlite';
 
-import { Product, Category, CartItem, SaleWithProducts } from '../types';
+import { Product, Category, CartItem, SaleWithProducts } from '~/types';
 
 // Define types for database result objects
 interface CategoryResult {
@@ -300,6 +300,7 @@ export const SaleRepository = {
       throw error;
     }
   },
+
   getAll: async (): Promise<SaleWithProducts[]> => {
     const database = getDatabase();
     try {
@@ -327,6 +328,46 @@ export const SaleRepository = {
           };
         })
       );
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getDailySalesCount: async (): Promise<{ date: string; count: number }[]> => {
+    const database = getDatabase();
+    try {
+      const results = await database.getAllAsync<{ date: string; count: number }>(
+        `SELECT
+          date,
+          COUNT(id) as count
+        FROM
+          Sales
+        GROUP BY
+          date
+        ORDER BY
+          date DESC
+        LIMIT 7
+          `
+      );
+      return results;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getSalesCountByDate: async (date: string): Promise<number> => {
+    const database = getDatabase();
+    try {
+      const result = await database.getFirstAsync<{ count: number }>(
+        `SELECT
+          COUNT(id) as count
+        FROM
+          Sales
+        WHERE
+          date = ?`,
+        [date]
+      );
+      return result?.count || 0;
     } catch (error) {
       throw error;
     }
