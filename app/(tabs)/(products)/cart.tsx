@@ -8,7 +8,8 @@ import { useProducts } from '~/contexts/ProductsContext';
 import { useSalesDrive } from '~/contexts/SalesDriveContext';
 
 export default function Cart() {
-  const { cart, removeFromCart, addToCart, removeOneFromCart, clearCart } = useProducts();
+  const { cart, removeFromCart, addToCart, removeOneFromCart, clearCart, confirmPurchase } =
+    useProducts();
   const { products } = useSalesDrive();
   const router = useRouter();
 
@@ -48,6 +49,7 @@ export default function Cart() {
 
   // Handle purchase confirmation
   const handleConfirmPurchase = () => {
+    confirmPurchase();
     // Clear cart
     clearCart();
     // Alert user

@@ -1,58 +1,80 @@
-import { useEffect, useState } from 'react';
-import { View, SafeAreaView, Text } from 'react-native';
+import { useEffect, useState, useCallback } from 'react';
+import { View, SafeAreaView, Text, RefreshControl } from 'react-native';
 
 import SaleExpansibleItemList from '~/components/SaleExpansibleItemList';
 import { SalesGraph } from '~/components/SalesGraph';
-import { SaleRepository } from '~/database/sql-implementation';
-
-interface DailySalesData {
-  date: string;
-  count: number;
-}
+import { useSales } from '~/contexts/SalesContext';
 
 export default function Sales() {
   const [labels, setLabels] = useState<string[]>([]);
   const [data, setData] = useState<number[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const { loading, dailySalesCount, refreshSales } = useSales();
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refreshSales();
+    setRefreshing(false);
+  }, [refreshSales]);
 
   useEffect(() => {
-    const fetchSalesData = async () => {
-      try {
-        const dailySales: DailySalesData[] = await SaleRepository.getDailySalesCount();
+    console.log('Raw dailySalesCount:', dailySalesCount);
 
-        setLabels(
-          dailySales.slice(dailySales.length - 7, dailySales.length).map((item) => {
-            const [, month, day] = item.date.split('-');
-            return `${day}/${month}`;
-          })
-        );
+    // Process the dailySalesCount data
+    if (dailySalesCount.length > 0) {
+      // Reverse the order to display oldest to newest
+      const reversedData = [...dailySalesCount].reverse();
+      console.log('Reversed data:', reversedData);
 
-        setData(dailySales.map((item) => item.count));
-      } catch (error) {
-        console.error('Error fetching sales data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      const newLabels = reversedData.map((item) => {
+        const [, month, day] = item.date.split('-');
+        return `${day}/${month}`;
+      });
 
-    fetchSalesData();
-  }, []);
+      const newData = reversedData.map((item) => item.count);
+
+      console.log('Setting labels:', newLabels);
+      console.log('Setting data:', newData);
+
+      setLabels(newLabels);
+      setData(newData);
+    } else {
+      // If there's no data, provide some dummy data for graph visualization
+      const dummyLabels = ['1/1', '2/1', '3/1', '4/1', '5/1'];
+      const dummyData = [5, 10, 8, 12, 15];
+
+      console.log('No sales data, using dummy data');
+      setLabels(dummyLabels);
+      setData(dummyData);
+    }
+  }, [dailySalesCount]);
+
+  // Graph content
+  const renderHeader = useCallback(
+    () => (
+      <>
+        {loading && !refreshing ? (
+          <View className="h-40 items-center justify-center">
+            <Text>Loading sales data...</Text>
+          </View>
+        ) : (
+          <SalesGraph labels={labels} datasets={data} />
+        )}
+
+        <Text className="mb-1 mt-1 rounded-lg border border-dashed border-blue-500 bg-blue-100 p-2.5 text-center text-4xl font-bold">
+          Last Five Sales
+        </Text>
+      </>
+    ),
+    [loading, refreshing, labels, data]
+  );
 
   return (
     <SafeAreaView className="ml-2 mr-2 flex-1">
-      {loading ? (
-        <View className="flex-1 items-center justify-center">
-          <Text>Loading sales data...</Text>
-        </View>
-      ) : (
-        <SalesGraph labels={labels} datasets={data} />
-      )}
-
-      <Text className="mb-1 mt-1 rounded-lg border border-dashed border-blue-500 bg-blue-100 p-2.5 text-center text-4xl font-bold">
-        Last Five Sales
-      </Text>
-
-      <SaleExpansibleItemList />
+      <SaleExpansibleItemList
+        ListHeaderComponent={renderHeader}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      />
     </SafeAreaView>
   );
 }

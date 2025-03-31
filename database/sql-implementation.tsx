@@ -310,10 +310,15 @@ export const SaleRepository = {
     }
   },
 
-  getAll: async (): Promise<SaleWithProducts[]> => {
+  getAll: async (limit?: number): Promise<SaleWithProducts[]> => {
     const database = getDatabase();
     try {
-      const sales = await database.getAllAsync('SELECT * FROM Sales ORDER BY date DESC');
+      const query = limit
+        ? 'SELECT * FROM Sales ORDER BY id DESC LIMIT ?'
+        : 'SELECT * FROM Sales ORDER BY id DESC';
+
+      const params = limit ? [limit] : [];
+      const sales = await database.getAllAsync(query, params);
 
       return Promise.all(
         sales.map(async (sale: any) => {
