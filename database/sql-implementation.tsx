@@ -304,7 +304,7 @@ export const SaleRepository = {
   getAll: async (): Promise<SaleWithProducts[]> => {
     const database = getDatabase();
     try {
-      const sales = await database.getAllAsync('SELECT * FROM Sales ORDER BY date DESC');
+      const sales = await database.getAllAsync('SELECT * FROM Sales ORDER BY id DESC');
 
       return Promise.all(
         sales.map(async (sale: any) => {
@@ -312,7 +312,8 @@ export const SaleRepository = {
             `SELECT ps.productId, ps.quantity, p.name, p.price
              FROM ProductSale ps
              JOIN Products p ON ps.productId = p.id
-             WHERE ps.saleId = ?`,
+             WHERE ps.saleId = ?
+             `,
             [sale.id]
           );
 
