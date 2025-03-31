@@ -18,13 +18,10 @@ export default function Sales() {
   }, [refreshSales]);
 
   useEffect(() => {
-    console.log('Raw dailySalesCount:', dailySalesCount);
-
     // Process the dailySalesCount data
     if (dailySalesCount.length > 0) {
       // Reverse the order to display oldest to newest
       const reversedData = [...dailySalesCount].reverse();
-      console.log('Reversed data:', reversedData);
 
       const newLabels = reversedData.map((item) => {
         const [, month, day] = item.date.split('-');
@@ -33,9 +30,6 @@ export default function Sales() {
 
       const newData = reversedData.map((item) => item.count);
 
-      console.log('Setting labels:', newLabels);
-      console.log('Setting data:', newData);
-
       setLabels(newLabels);
       setData(newData);
     } else {
@@ -43,7 +37,6 @@ export default function Sales() {
       const dummyLabels = ['1/1', '2/1', '3/1', '4/1', '5/1'];
       const dummyData = [5, 10, 8, 12, 15];
 
-      console.log('No sales data, using dummy data');
       setLabels(dummyLabels);
       setData(dummyData);
     }
@@ -62,7 +55,7 @@ export default function Sales() {
         )}
 
         <Text className="mb-1 mt-1 rounded-lg border border-dashed border-blue-500 bg-blue-100 p-2.5 text-center text-4xl font-bold">
-          Last Five Sales
+          Last Sales
         </Text>
       </>
     ),

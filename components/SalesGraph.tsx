@@ -20,9 +20,6 @@ export function SalesGraph({ labels, datasets }: SalesGraphProps) {
   const [points, setPoints] = useState<GraphPoint[]>([]);
 
   useEffect(() => {
-    console.log('SalesGraph datasets:', datasets);
-    console.log('SalesGraph labels:', labels);
-
     // Convert datasets and labels to points format required by react-native-graph
     if (datasets.length > 0 && labels.length > 0) {
       // Create points for the graph, using timestamps to ensure proper ordering
@@ -68,7 +65,6 @@ export function SalesGraph({ labels, datasets }: SalesGraphProps) {
         graphPoints.push(basePoints[basePoints.length - 1]);
       }
 
-      console.log('Generated graph points:', graphPoints);
       setPoints(graphPoints);
     }
   }, [datasets, labels]);
