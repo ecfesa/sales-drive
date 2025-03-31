@@ -27,8 +27,12 @@ export default function Sales() {
       console.log('Reversed data:', reversedData);
 
       const newLabels = reversedData.map((item) => {
-        const [, month, day] = item.date.split('-');
-        return `${day}/${month}`;
+        // Extract date part (before the space) and split into components
+        const [datePart] = item.date.split(' ');
+        const [, month, day] = datePart.split('-');
+
+        // Format as DD/MM (with proper padding)
+        return `${day.padStart(2, '0')}/${month.padStart(2, '0')}`;
       });
 
       const newData = reversedData.map((item) => item.count);

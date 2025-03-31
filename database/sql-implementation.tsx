@@ -54,7 +54,7 @@ export const initDatabase = () => {
 
     CREATE TABLE IF NOT EXISTS Sales (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      date TEXT NOT NULL
+      date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS ProductSale (
@@ -250,17 +250,37 @@ export const CategoryRepository = {
  * - delete: Removes sale and related records
  */
 export const SaleRepository = {
-  create: async (saleData: { date: string; items: CartItem[] }): Promise<number> => {
+
+  create: async (saleData: { date?: string; items: CartItem[] }): Promise<number> => {
     const database = getDatabase();
-    let saleId = 0; // Initialize with a default value
+    let saleId = 0;
 
     try {
       await database.withTransactionAsync(async () => {
-        const saleResult = await database.runAsync('INSERT INTO Sales (date) VALUES (?)', [
-          saleData.date,
-        ]);
+        // Normalize the date string to SQL datetime format
+        let sqlDate: string;
+
+        if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(saleData.date)) {
+          // Format: YYYY-MM-DD
+          const [year, month, day] = saleData.date.split('-');
+          sqlDate = `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')} 00:00:00`;
+        } else if (/^\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{2}:\d{2}$/.test(saleData.date)) {
+          // Format: YYYY-MM-DD HH:MM:SS
+          const [datePart, timePart] = saleData.date.split(' ');
+          const [year, month, day] = datePart.split('-');
+          sqlDate = `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${timePart}`;
+        } else {
+          throw new Error('Invalid date format. Use YYYY-MM-DD or YYYY-MM-DD HH:MM:SS');
+        }
+
+        // Insert sale with the specified date
+        const saleResult = await database.runAsync(
+          'INSERT INTO Sales (date) VALUES (?)',
+          [sqlDate]
+        );
         saleId = saleResult.lastInsertRowId as number;
 
+        // Process each item
         for (const item of saleData.items) {
           if (!(await ProductRepository.getById(item.productId))) {
             throw new Error(`Invalid product ID: ${item.productId}`);
@@ -274,7 +294,7 @@ export const SaleRepository = {
       });
       return saleId;
     } catch (error) {
-      throw error; // Or handle the error as needed
+      throw error;
     }
   },
 
@@ -327,7 +347,7 @@ export const SaleRepository = {
              FROM ProductSale ps
              JOIN Products p ON ps.productId = p.id
              WHERE ps.saleId = ?
-             `,
+             ORDER BY ps.saleId DESC`,
             [sale.id]
           );
 

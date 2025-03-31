@@ -12,6 +12,8 @@ import Collapsible from 'react-native-collapsible';
 
 import { useSales } from '~/contexts/SalesContext';
 
+import SaleItem from '~/components/SalesExpansibleItem'
+
 interface SaleExpansibleItemType {
   id: number;
   title: string;
@@ -46,15 +48,9 @@ export default function SaleExpansibleItemList({
 
   useEffect(() => {
     try {
-      // Sort by date descending and take last 5
-      const recentSales = [...sales].sort((a, b) => {
-        const dateA = new Date(a.date.split('/').reverse().join('-'));
-        const dateB = new Date(b.date.split('/').reverse().join('-'));
-        return dateB.getTime() - dateA.getTime();
-      });
 
       // Transform to SaleExpansibleItemType format
-      const formattedItems = recentSales.map((sale) => ({
+      const formattedItems = [...sales].map((sale) => ({
         id: sale.id,
         title: `Sale on ${formatDateToExtended(sale.date)} - ${sale.items.length} items`,
         content: sale.items
@@ -76,26 +72,13 @@ export default function SaleExpansibleItemList({
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
-  const renderSaleItem: ListRenderItem<SaleExpansibleItemType> = ({ item, index }) => (
-    <View className="mb-2 overflow-hidden rounded-lg border border-gray-200">
-      <TouchableOpacity
-        className="bg-gray-50 p-4"
-        onPress={() => handleToggle(index)}
-        activeOpacity={0.8}>
-        <View className="flex-row items-center justify-between">
-          <Text className="flex-1 text-base font-bold">{item.title}</Text>
-          <Text className="ml-2 text-sm font-semibold text-emerald-500">
-            Total: ${item.total.toFixed(2)}
-          </Text>
-        </View>
-      </TouchableOpacity>
-
-      <Collapsible collapsed={expandedIndex !== index}>
-        <View className="bg-white p-4">
-          <Text className="text-sm leading-5 text-gray-700">{item.content}</Text>
-        </View>
-      </Collapsible>
-    </View>
+  const renderSaleItem = ({ item, index }) => (
+    <SaleItem
+      item={item}
+      index={index}
+      isExpanded={expandedIndex === index}
+      onToggle={handleToggle}
+    />
   );
 
   if (loading && !refreshControl) {
