@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useEffect , useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SectionList, Text, View, FlatList, SafeAreaView } from 'react-native';
 
 import { ProductCard } from '~/components/ProductCard';

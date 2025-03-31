@@ -1,7 +1,7 @@
 import { AntDesign } from '@expo/vector-icons';
-import { Text, TouchableOpacity, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useState, useEffect } from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
 
 import { Button } from './Button';
 
@@ -62,9 +62,9 @@ export function ProductCard({
           <AntDesign name="edit" size={16} color="white" />
         </View>
       )}
-      <Image 
-        source={imageSource} 
-        className="h-40 w-full rounded-t-lg" 
+      <Image
+        source={imageSource}
+        className="h-40 w-full rounded-t-lg"
         contentFit="cover"
         transition={300}
       />

@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import { openDatabaseSync, SQLiteDatabase } from 'expo-sqlite';
 
-import { Product, Category, CartItem, SaleWithProducts } from '../types/types';
+import { Product, Category, CartItem, SaleWithProducts } from '~/types/types';
 
 // Define types for database result objects
 interface CategoryResult {
@@ -150,7 +150,6 @@ export const ProductRepository = {
        FROM Products p
        JOIN Categories c ON p.categoryId = c.id`
     );
-    console.log(results);
     return results.map(mapProduct);
   },
 

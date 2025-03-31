@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, SafeAreaView, Text } from 'react-native';
+import { StyleSheet, View, SafeAreaView, ScrollView, Text } from 'react-native';
+
+import SaleExpansibleItemList from '~/components/SaleExpansibleItemList';
 import { SalesGraph } from '~/components/SalesGraph';
-import RecentSalesList from '~/components/SalesExpansibleItem';
 import { SaleRepository } from '~/database/sql-implementation';
 
 interface DailySalesData {
@@ -19,14 +20,16 @@ export default function Sales() {
       try {
         const dailySales: DailySalesData[] = await SaleRepository.getDailySalesCount();
 
-        setLabels(dailySales.slice(dailySales.length-7, dailySales.length).map((item) => {
+        setLabels(
+          dailySales.slice(dailySales.length - 7, dailySales.length).map((item) => {
             const [year, month, day] = item.date.split('-');
             return `${day}/${month}`;
-        }));
+          })
+        );
 
         setData(dailySales.map((item) => item.count));
       } catch (error) {
-        console.error("Error fetching sales data:", error);
+        console.error('Error fetching sales data:', error);
       } finally {
         setLoading(false);
       }
@@ -36,23 +39,22 @@ export default function Sales() {
   }, []);
 
   return (
-    <SafeAreaView className="flex-1 mt-6">
+    <SafeAreaView className="ml-2 mr-2 flex-1">
       {loading ? (
-        <View className="flex-1 justify-center items-center">
+        <View className="flex-1 items-center justify-center">
           <Text>Loading sales data...</Text>
         </View>
       ) : (
         <SalesGraph labels={labels} datasets={data} />
       )}
 
-      <RecentSalesList />
+      <Text className="mb-1 mt-1 rounded-lg border border-dashed border-blue-500 bg-blue-100 p-2.5 text-center text-4xl font-bold">
+        Last Five Sales
+      </Text>
+
+      <ScrollView>
+        <SaleExpansibleItemList />
+      </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-  },
-});
