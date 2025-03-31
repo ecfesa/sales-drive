@@ -13,39 +13,54 @@ export default function Cart() {
   const { products } = useSalesDrive();
   const router = useRouter();
 
-  // Find product details for each cart item
+  // Create a memoized map for quick product lookups
+  const productMap = useMemo(() => {
+    const map: Record<number, any> = {};
+    products.forEach((product) => {
+      map[product.id] = product;
+    });
+    return map;
+  }, [products]);
+
+  // Find product details using the memoized map
   const getProductById = useCallback(
     (productId: number) => {
-      return products.find((product) => product.id === productId);
+      return productMap[productId];
     },
-    [products]
+    [productMap]
   );
 
   // Handle removing a product from cart
-  const handleRemoveFromCart = (productId: number) => {
-    const product = getProductById(productId);
-    if (product) {
-      removeFromCart(product);
-    }
-  };
+  const handleRemoveFromCart = useCallback(
+    (productId: number) => {
+      const product = getProductById(productId);
+      if (product) {
+        removeFromCart(product);
+      }
+    },
+    [getProductById, removeFromCart] // Add dependencies
+  );
 
   // Handle updating the quantity of a product in cart
-  const handleUpdateQuantity = (productId: number, newQuantity: number) => {
-    const product = getProductById(productId);
-    if (!product) return;
+  const handleUpdateQuantity = useCallback(
+    (productId: number, newQuantity: number) => {
+      const product = getProductById(productId);
+      if (!product) return;
 
-    // Get current quantity
-    const cartItem = cart.items.find((item) => item.productId === productId);
-    const currentQuantity = cartItem?.quantity || 0;
+      // Get current quantity
+      const cartItem = cart.items.find((item) => item.productId === productId);
+      const currentQuantity = cartItem?.quantity || 0;
 
-    if (newQuantity > currentQuantity) {
-      // Add to cart
-      addToCart(product);
-    } else if (newQuantity < currentQuantity) {
-      // Remove one from cart
-      removeOneFromCart(product);
-    }
-  };
+      if (newQuantity > currentQuantity) {
+        // Add to cart
+        addToCart(product);
+      } else if (newQuantity < currentQuantity) {
+        // Remove one from cart
+        removeOneFromCart(product);
+      }
+    },
+    [getProductById, cart.items, addToCart, removeOneFromCart] // Add dependencies
+  );
 
   // Handle purchase confirmation
   const handleConfirmPurchase = () => {
@@ -69,24 +84,26 @@ export default function Cart() {
     );
   };
 
-  // Calculate total price of all items in cart
-  const totalPrice = cart.items.reduce((total, item) => {
-    const product = getProductById(item.productId);
-    return total + (product?.price || 0) * item.quantity;
-  }, 0);
+  // Calculate total price of all items in cart using the map and memoize it
+  const totalPrice = useMemo(() => {
+    return cart.items.reduce((total, item) => {
+      const product = productMap[item.productId];
+      return total + (product?.price || 0) * item.quantity;
+    }, 0);
+  }, [cart.items, productMap]);
 
-  // Sort cart items alphabetically by product name
+  // Sort cart items alphabetically by product name using the map
   const sortedCartItems = useMemo(() => {
     return [...cart.items].sort((a, b) => {
-      const productA = getProductById(a.productId);
-      const productB = getProductById(b.productId);
+      const productA = productMap[a.productId];
+      const productB = productMap[b.productId];
 
       if (!productA?.name) return 1;
       if (!productB?.name) return -1;
 
       return productA.name.localeCompare(productB.name);
     });
-  }, [cart.items, getProductById]);
+  }, [cart.items, productMap]);
 
   // Check if cart is empty
   const isCartEmpty = cart.items.length === 0;

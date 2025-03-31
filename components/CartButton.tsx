@@ -20,8 +20,10 @@ export const CartButton = forwardRef<PressableRef, { onPress?: () => void; itemC
               }}
             />
             {itemCount > 0 && (
-              <View className="absolute -top-1.5 right-2 h-[18px] w-[18px] items-center justify-center rounded-full bg-[#FF3B30] px-[3px]">
-                <Text className="text-center text-xs font-bold text-white">{itemCount}</Text>
+              <View className="absolute -top-1.5 right-2 h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#FF3B30] px-[3px]">
+                <Text className="text-center text-xs font-bold text-white">
+                  {itemCount > 99 ? '99+' : itemCount}
+                </Text>
               </View>
             )}
           </View>

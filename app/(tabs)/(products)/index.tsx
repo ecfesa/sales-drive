@@ -1,6 +1,6 @@
 import { AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, memo } from 'react';
 import {
   SectionList,
   Text,
@@ -66,32 +66,40 @@ export default function Products() {
     setCategories(Object.keys(groupedProducts));
   }, [products]);
 
-  // This renders each product card
-  const renderProduct = ({ item }: { item: Product }) => (
-    <View className="m-1 w-[48%]">
-      <ProductCard
-        id={item.id.toString()}
-        name={item.name}
-        price={item.price}
-        image={item.imagePath}
-        onPressCard={() => handlePressProduct(item)}
-        onPressButton={() => handleProductButtonPress(item)}
-        editMode={editMode}
-      />
-    </View>
+  const handlePressProduct = useCallback(
+    (product: Product) => {
+      router.push(`/id/${product.id.toString()}`);
+    },
+    [router]
   );
 
-  const handlePressProduct = (product: Product) => {
-    router.push(`/id/${product.id.toString()}`);
-  };
+  const handleProductButtonPress = useCallback(
+    (product: Product) => {
+      if (editMode) {
+        deleteProduct(product);
+      } else {
+        addToCart(product);
+      }
+    },
+    [editMode, deleteProduct, addToCart]
+  );
 
-  const handleProductButtonPress = (product: Product) => {
-    if (editMode) {
-      deleteProduct(product);
-    } else {
-      addToCart(product);
-    }
-  };
+  const renderProduct = useCallback(
+    ({ item }: { item: Product }) => (
+      <View className="m-1 w-[48%]">
+        <ProductCard
+          id={item.id.toString()}
+          name={item.name}
+          price={item.price}
+          image={item.imagePath}
+          onPressCard={() => handlePressProduct(item)}
+          onPressButton={() => handleProductButtonPress(item)}
+          editMode={editMode}
+        />
+      </View>
+    ),
+    [editMode, handlePressProduct, handleProductButtonPress]
+  );
 
   const handleCreateFirstProduct = () => {
     router.push('/new');
