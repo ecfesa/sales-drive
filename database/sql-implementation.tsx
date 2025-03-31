@@ -326,7 +326,8 @@ export const SaleRepository = {
             `SELECT ps.productId, ps.quantity, p.name, p.price
              FROM ProductSale ps
              JOIN Products p ON ps.productId = p.id
-             WHERE ps.saleId = ?`,
+             WHERE ps.saleId = ?
+             `,
             [sale.id]
           );
 
