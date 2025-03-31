@@ -1,11 +1,6 @@
-import { AntDesign } from '@expo/vector-icons';
-import { router, Stack } from 'expo-router';
-import { useEffect, useCallback, useMemo } from 'react';
-import { Text, View, Pressable } from 'react-native';
+import { Stack } from 'expo-router';
 
-import BlankHeader from '~/components/BlankHeader';
-import CartButton from '~/components/CartButton';
-import { ProductHeader } from '~/components/ProductHeader';
+import ProductHeader from '~/components/ProductHeader';
 import { ProductsProvider } from '~/contexts/ProductsContext';
 
 export const unstable_settings = {

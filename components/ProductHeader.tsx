@@ -8,7 +8,7 @@ import CartButton from '~/components/CartButton';
 import { useProducts } from '~/contexts/ProductsContext';
 import { useSalesDrive } from '~/contexts/SalesDriveContext';
 
-export const ProductHeader = React.memo(() => {
+const ProductHeader = React.memo(() => {
   const { editMode, toggleEditMode, setEditMode, getCartItemCount } = useProducts();
   const { isAdminMode, adminClickReceived, products } = useSalesDrive();
 
@@ -20,6 +20,7 @@ export const ProductHeader = React.memo(() => {
   }, [isAdminMode, setEditMode]);
 
   // Memoize callback functions
+  // This improves performance by preventing the variables from being recreated on every render
   const handleTitlePress = useCallback(() => {
     adminClickReceived();
   }, [adminClickReceived]);
@@ -77,4 +78,6 @@ export const ProductHeader = React.memo(() => {
       )}
     </BlankHeader>
   );
-}); 
+});
+
+export default ProductHeader;
