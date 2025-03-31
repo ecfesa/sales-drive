@@ -373,16 +373,15 @@ export const SaleRepository = {
     try {
       const results = await database.getAllAsync<{ date: string; count: number }>(
         `SELECT
-          date,
+          DATE(date) as date,
           COUNT(id) as count
         FROM
           Sales
         GROUP BY
-          date
+          DATE(date)
         ORDER BY
           date DESC
-        LIMIT 7
-          `
+        LIMIT 7`
       );
       return results;
     } catch (error) {

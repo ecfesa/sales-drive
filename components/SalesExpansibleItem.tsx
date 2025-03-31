@@ -34,22 +34,10 @@ const SaleItem: React.FC<SaleItemProps> = ({
   >
     <View className="flex-row items-center justify-between">
       <View className="flex-row items-center flex-1">
-        {/* Sale Icon */}
-        <View className="mr-3 bg-amber-500 rounded-full p-1">
-          <Text className="text-white text-xs font-bold px-1">SALE</Text>
-        </View>
-
         <Text className="text-lg font-bold text-amber-900">{item.title}</Text>
       </View>
 
       <View className="flex-row items-center">
-        {/* Quantity Badge */}
-        <View className="bg-amber-100 rounded-full px-2 py-1 mr-3">
-          <Text className="text-xs font-semibold text-amber-800">
-            {item.quantity}x
-          </Text>
-        </View>
-
         {/* Total Price */}
         <Text className="text-lg font-bold text-amber-600">
           ${item.total.toFixed(2)}
@@ -70,9 +58,6 @@ const SaleItem: React.FC<SaleItemProps> = ({
           {/* Replace with your actual icon component */}
           <Text className="text-amber-800">🍞</Text>
         </View>
-        <Text className="text-sm text-amber-700">
-          Freshly baked | {item.category}
-        </Text>
       </View>
     </View>
   </Collapsible>
