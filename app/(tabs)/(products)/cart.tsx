@@ -59,7 +59,7 @@ export default function Cart() {
       [
         {
           text: 'Go to sales',
-          onPress: () => console.log('Go to sales not implemented'),
+          onPress: () => router.navigate('/(tabs)/(sales)'),
         },
         {
           text: 'Go to products',
