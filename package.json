@@ -34,6 +34,7 @@
     "react-native": "0.76.7",
     "react-native-chart-kit": "^6.12.0",
     "react-native-collapsible": "^1.6.2",
+    "react-native-element-dropdown": "^2.12.4",
     "react-native-gesture-handler": "~2.20.2",
     "react-native-graph": "^1.1.0",
     "react-native-reanimated": "3.16.7",

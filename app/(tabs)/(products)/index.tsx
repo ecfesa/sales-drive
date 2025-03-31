@@ -11,6 +11,7 @@ import {
   Pressable,
 } from 'react-native';
 
+import OptionSelector from '~/components/OptionSelector';
 import { ProductCard } from '~/components/ProductCard';
 import { useProducts } from '~/contexts/ProductsContext';
 import { useSalesDrive } from '~/contexts/SalesDriveContext';
@@ -29,7 +30,8 @@ export default function Products() {
 
   const { products, loading: initialLoading, deleteProduct, reloadProducts } = useSalesDrive();
   const [productsByCategory, setProductsByCategory] = useState<ProductSection[]>([]);
-
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const onRefresh = async () => {
     setRefreshing(true);
     await reloadProducts();
@@ -61,6 +63,7 @@ export default function Products() {
     });
 
     setProductsByCategory(sections);
+    setCategories(Object.keys(groupedProducts));
   }, [products]);
 
   // This renders each product card
@@ -120,10 +123,19 @@ export default function Products() {
 
   return (
     <SafeAreaView className="flex-1">
+      <OptionSelector
+        options={categories.map((category) => ({ label: category, value: category }))}
+        selectedValues={selectedCategories}
+        onChange={setSelectedCategories}
+        placeholder="Select categories"
+        searchPlaceholder="Search categories"
+      />
       <SectionList
         className="flex-1 p-4"
         contentContainerClassName="gap-2.5"
-        sections={productsByCategory}
+        sections={productsByCategory.filter(
+          (section) => selectedCategories.length === 0 || selectedCategories.includes(section.title)
+        )}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         renderItem={({ item }) => (
           <FlatList
