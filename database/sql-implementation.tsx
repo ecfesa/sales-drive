@@ -26,58 +26,16 @@ interface ProductSaleResult {
  * Database connection instance
  */
 let db: SQLiteDatabase | null = null;
-
-/**
- * Opens database connection if not already open
- * @returns SQLiteDatabase instance
- */
-const getDatabase = (): SQLiteDatabase => {
-  if (!db) {
-    db = openDatabaseSync('sales-drive.db');
-  }
-  return db;
-};
-
-/**
- * Completely resets the database by:
- * 1. Closing current connection
- * 2. Deleting the database file
- * 3. Recreating the database
- * 4. Clearing the seeding flag
- */
-export const resetDatabase = async () => {
-  try {
-    // Close existing connection if open
-    if (db) {
-      await db.closeAsync();
-      db = null;
-    }
-
-    // Delete database file
-    const dbPath = `${FileSystem.documentDirectory}SQLite/sales-drive.db`;
-    const fileInfo = await FileSystem.getInfoAsync(dbPath);
-
-    if (fileInfo.exists) {
-      await FileSystem.deleteAsync(dbPath);
-    }
-
-    // Reinitialize database
-    db = openDatabaseSync('sales-drive.db');
-    initDatabase();
-
-    // Clear seeding flag
-    await AsyncStorage.removeItem('databaseSeeded');
-  } catch (error) {
-    throw error;
-  }
-};
+let isInitialized = false;
 
 /**
  * Initializes database tables (Categories, Products, Sales, ProductSale)
  * Runs the SQL commands to create tables if they don't exist
  */
 export const initDatabase = () => {
-  const database = getDatabase();
+  if (isInitialized) return;
+  
+  const database = db!;
   database.execSync(`
     CREATE TABLE IF NOT EXISTS Categories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -108,6 +66,57 @@ export const initDatabase = () => {
       FOREIGN KEY (productId) REFERENCES Products(id)
     );
   `);
+  
+  isInitialized = true;
+};
+
+/**
+ * Opens database connection if not already open
+ * @returns SQLiteDatabase instance
+ */
+const getDatabase = (): SQLiteDatabase => {
+  if (!db) {
+    db = openDatabaseSync('sales-drive.db');
+    initDatabase(); // Initialize database tables when connection is first created
+  }
+  return db;
+};
+
+/**
+ * Completely resets the database by:
+ * 1. Closing current connection
+ * 2. Deleting the database file
+ * 3. Recreating the database
+ * 4. Clearing the seeding flag
+ */
+export const resetDatabase = async () => {
+  try {
+    // Close existing connection if open
+    if (db) {
+      await db.closeAsync();
+      db = null;
+    }
+
+    // Reset initialization flag
+    isInitialized = false;
+
+    // Delete database file
+    const dbPath = `${FileSystem.documentDirectory}SQLite/sales-drive.db`;
+    const fileInfo = await FileSystem.getInfoAsync(dbPath);
+
+    if (fileInfo.exists) {
+      await FileSystem.deleteAsync(dbPath);
+    }
+
+    // Reinitialize database
+    db = openDatabaseSync('sales-drive.db');
+    initDatabase();
+
+    // Clear seeding flag
+    await AsyncStorage.removeItem('databaseSeeded');
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**
