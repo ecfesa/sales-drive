@@ -26,42 +26,36 @@ const SaleItem: React.FC<SaleItemProps> = ({
   };
 
   return (
-    <View className="mb-4 overflow-hidden rounded-xl border-2 border-amber-100 bg-white shadow-sm shadow-amber-200">
-  <TouchableOpacity
-    className="bg-amber-50 p-4"
-    onPress={handlePress}
-    activeOpacity={0.9}
-  >
-    <View className="flex-row items-center justify-between">
-      <View className="flex-row items-center flex-1">
-        <Text className="text-lg font-bold text-amber-900">{item.title}</Text>
-      </View>
+    <View className="mb-4 overflow-hidden rounded-xl border-2 border-indigo-100 bg-white shadow shadow-indigo-200">
+      <TouchableOpacity
+        className="bg-indigo-50 p-4"
+        onPress={handlePress}
+        activeOpacity={0.9}
+      >
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center flex-1">
+            <Text className="text-lg font-bold text-black">{item.title}</Text>
+          </View>
 
-      <View className="flex-row items-center">
-        {/* Total Price */}
-        <Text className="text-lg font-bold text-amber-600">
-          ${item.total.toFixed(2)}
-        </Text>
-      </View>
-    </View>
-  </TouchableOpacity>
-
-  <Collapsible collapsed={!isExpanded}>
-    <View className="bg-amber-50 p-4 border-t-2 border-amber-100">
-      <Text className="text-base leading-6 text-amber-900 opacity-90">
-        {item.content}
-      </Text>
-
-      {/* Additional bakery details */}
-      <View className="mt-3 flex-row items-center">
-        <View className="bg-amber-200 rounded-full p-1 mr-2">
-          {/* Replace with your actual icon component */}
-          <Text className="text-amber-800">🍞</Text>
+          <View className="flex-row items-center">
+            <Text className="text-lg font-bold text-emerald-600">
+              ${item.total.toFixed(2)}
+            </Text>
+          </View>
         </View>
-      </View>
+      </TouchableOpacity>
+
+      <Collapsible collapsed={!isExpanded}>
+        <View className="bg-indigo-50 p-4 border-t-2 border-indigo-100">
+          <Text className="text-base leading-6 text-indigo-900 opacity-90">
+            {item.content}
+          </Text>
+
+          <View className="mt-3 flex-row items-center">
+          </View>
+        </View>
+      </Collapsible>
     </View>
-  </Collapsible>
-</View>
   );
 };
 

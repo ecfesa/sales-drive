@@ -57,6 +57,10 @@ export default function Sales() {
   const renderHeader = useCallback(
     () => (
       <>
+        <Text className="mb-1 mt-1 rounded-lg border border-dashed border-indigo-500 bg-blue-100 p-2.5 text-center text-4xl font-bold">
+          Graphical View
+        </Text>
+
         {loading && !refreshing ? (
           <View className="h-40 items-center justify-center">
             <Text>Loading sales data...</Text>
@@ -65,8 +69,8 @@ export default function Sales() {
           <SalesGraph labels={labels} datasets={data} />
         )}
 
-        <Text className="mb-1 mt-1 rounded-lg border border-dashed border-blue-500 bg-blue-100 p-2.5 text-center text-4xl font-bold">
-          Last Sales
+        <Text className="mb-3 mt-1 rounded-lg border border-dashed border-indigo-500 bg-blue-100 p-2.5 text-center text-4xl font-bold">
+          Listing Sales
         </Text>
       </>
     ),

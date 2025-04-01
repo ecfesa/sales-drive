@@ -446,6 +446,11 @@ export const debugDatabase = {
   printAllData: async () => {
     const database = getDatabase();
     try {
+      // First get all products to map IDs to names
+      const products = await database.getAllAsync('SELECT id, name FROM Products');
+      const productMap = {};
+      products.forEach(p => productMap[p.id] = p.name);
+
       const data = {
         categories: await database.getAllAsync('SELECT * FROM Categories'),
         products: await database.getAllAsync(`
@@ -467,13 +472,38 @@ export const debugDatabase = {
         `),
       };
 
-      console.log('DATABASE CONTENTS:');
-      console.log('Categories:', JSON.stringify(data.categories, null, 2));
-      console.log('Products:', JSON.stringify(data.products, null, 2));
-      console.log('Sales:', JSON.stringify(data.sales, null, 2));
-      console.log('Product Sales:', JSON.stringify(data.productSales, null, 2));
+      // Format the sales with product names
+      const formatSaleItems = (itemsString) => {
+        if (!itemsString) return 'none';
+        return itemsString.split('; ').map(item => {
+          const [productId, quantity] = item.split(':');
+          const productName = productMap[productId] || `Unknown Product (ID: ${productId})`;
+          return `${productName} (Qty: ${quantity})`;
+        }).join('\n    ');
+      };
+
+      // Format the data into a pretty string
+      const prettyData = `
+=== DATABASE DUMP ===
+Generated at: ${new Date().toLocaleString()}
+
+=== CATEGORIES (${data.categories.length}) ===
+${data.categories.map(c => `• ${c.id}: ${c.name}`).join('\n') || 'No categories'}
+
+=== PRODUCTS (${data.products.length}) ===
+${data.products.map(p => `• ${p.id}: ${p.name} (${p.price}) - Category: ${p.categoryName}`).join('\n') || 'No products'}
+
+=== SALES (${data.sales.length}) ===
+${data.sales.map(s => `• ${s.id}: ${s.date}\n Items:\n    ${formatSaleItems(s.items)}`).join('\n\n') || 'No sales'}
+
+=== PRODUCT SALES (${data.productSales.length}) ===
+${data.productSales.map(ps => `• Sale ${ps.saleId}: ${ps.productName} (Qty: ${ps.quantity})`).join('\n') || 'No product sales'}
+`;
+
+      return prettyData;
     } catch (error) {
       console.log('Failed to print database contents:', error);
+      return `Error generating database dump: ${error.message}`;
     }
   },
 };

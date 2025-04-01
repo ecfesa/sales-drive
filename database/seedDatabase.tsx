@@ -1,11 +1,17 @@
-import { CategoryRepository, ProductRepository, SaleRepository } from './sql-implementation';
-
+import { CategoryRepository, ProductRepository, SaleRepository, resetDatabase } from './sql-implementation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import productsToCreate from '~/mock/seedProducts';
 import salesToCreate from '~/mock/seedSales';
 
 // ======================
 // Database Seeding Module
 // ======================
+
+var logOutput = ""; // This will accumulate all log messages
+
+const addToLog = (message: string) => {
+    logOutput += `${message}\n`; // Add to our return string
+  };
 
 /**
  * Populates the database with initial sample data including:
@@ -18,86 +24,108 @@ import salesToCreate from '~/mock/seedSales';
  */
 export const seedDatabase = async () => {
   try {
+
     // ======================
     // 1. Category Seeding
     // ======================
-    await CategoryRepository.create('Bread');
-    await CategoryRepository.create('Pastry');
-    await CategoryRepository.create('Dessert');
+    addToLog("📁 Seeding categories...");
+    const categoryNames = ['Bread', 'Pastry', 'Dessert'];
+    const categoryIds = [];
+
+    for (const name of categoryNames) {
+      const id = await CategoryRepository.create(name);
+      categoryIds.push(id);
+      addToLog(`   ✔ Created category: ${name} (ID: ${id})`);
+    }
+    addToLog(`✅ Successfully created ${categoryIds.length} categories\n`);
 
     // ======================
     // 2. Product Creation
     // ======================
+    addToLog("🍞 Seeding products...");
     const productIds: number[] = [];
 
-    // Create products one by one
-    console.log('Starting product creation...');
     for (const [index, product] of productsToCreate.entries()) {
       try {
         const id = await ProductRepository.create(product);
         productIds.push(id);
-        console.log(
-          `Created product [${index + 1}/${productsToCreate.length}]: ${product.name} (ID: ${id})`
-        );
+        addToLog(`   ✔ [${index + 1}/${productsToCreate.length}] ${product.name} (ID: ${id})`);
       } catch (error) {
-        console.error(`Failed to create product "${product.name}":`, error);
-        throw new Error(`Product creation failed at ${product.name}. Aborting seeding.`);
+        addToLog(`   ❌ Failed to create product "${product.name}": ${error.message}`);
+        throw new Error(`Product creation failed at ${product.name}`);
       }
     }
 
-    // Validate product IDs
     if (productIds.length !== productsToCreate.length) {
-      throw new Error(
-        `Product creation incomplete. Expected ${productsToCreate.length} products, got ${productIds.length}`
-      );
+      throw new Error(`Expected ${productsToCreate.length} products, got ${productIds.length}`);
     }
+    addToLog(`✅ Successfully created ${productIds.length} products\n`);
 
     // ======================
     // 3. Sales Creation
     // ======================
+    addToLog("💰 Seeding sales...");
     const saleIds: number[] = [];
 
-    // Create sales one by one
-    console.log('\nStarting sales creation...');
     for (const [index, sale] of salesToCreate.entries()) {
       try {
-        // Validate product IDs exist before creating sale
+        // Validate product IDs
         for (const item of sale.items) {
           if (!productIds.includes(item.productId)) {
-            throw new Error(`Invalid product ID ${item.productId} in sale for ${sale.date}`);
+            throw new Error(`Invalid product ID ${item.productId}`);
           }
         }
 
         const id = await SaleRepository.create(sale);
         saleIds.push(id);
-        console.log(
-          `Created sale [${index + 1}/${salesToCreate.length}] for ${sale.date} (ID: ${id})`
-        );
-      } catch (error) {
-        console.error(`Failed to create sale for ${sale.date}:`, error);
-        throw new Error(`Sale creation failed at ${sale.date}. Aborting seeding.`);
-      }
-    }
 
-    // Final validation and summary
-    if (saleIds.length === salesToCreate.length) {
-      console.log('\nSeeding completed successfully!');
-      console.log(`- Products created: ${productIds.length}`);
-      console.log(`- Sales created: ${saleIds.length}`);
-      console.log(`- First product ID: ${productIds[0]}`);
-      console.log(`- Last sale ID: ${saleIds[saleIds.length - 1]}`);
-    } else {
-      throw new Error(
-        `Seeding incomplete. Expected ${salesToCreate.length} sales, got ${saleIds.length}`
-      );
+        // Format sale items for display
+        const itemsFormatted = sale.items.map(item => {
+          const product = productsToCreate.find(p => p.id === item.productId);
+          return `${product?.name || 'Unknown'} (Qty: ${item.quantity})`;
+        }).join(', ');
+
+        addToLog(`   ✔ [${index + 1}/${salesToCreate.length}] ${sale.date} (ID: ${id})`);
+        addToLog(`      Items: ${itemsFormatted}`);
+      } catch (error) {
+        addToLog(`   ❌ Failed to create sale for ${sale.date}: ${error.message}`);
+        throw new Error(`Sale creation failed at ${sale.date}`);
+      }
     }
 
     // ======================
     // 4. Completion
     // ======================
-    console.log('Bakery database seeded successfully!');
+    addToLog("\n🎉 Database seeding completed successfully!");
+    addToLog("====================================");
+    addToLog(`📊 Summary:`);
+    addToLog(`   - Categories: ${categoryIds.length}`);
+    addToLog(`   - Products: ${productIds.length}`);
+    addToLog(`   - Sales: ${saleIds.length}`);
+    addToLog(`   - First product ID: ${productIds[0]}`);
+    addToLog(`   - Last sale ID: ${saleIds[saleIds.length - 1]}`);
+    addToLog("====================================\n");
+
+    // Mark as seeded in async storage
+    await AsyncStorage.setItem('databaseSeeded', 'true');
+
+    return {
+      success: true,
+      logs: logOutput,
+      counts: {
+        categories: categoryIds.length,
+        products: productIds.length,
+        sales: saleIds.length
+      }
+    };
   } catch (error) {
-    console.error('Bakery database seeding failed:', error);
-    throw error;
+    addToLog("\n🔥 Seeding failed - rolling back changes...");
+    await resetDatabase();
+
+    return {
+      success: false,
+      logs: logOutput,
+      error: error.message
+    };
   }
 };
