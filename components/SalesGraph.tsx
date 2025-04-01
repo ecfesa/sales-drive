@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Modal, Text, TouchableOpacity, Pressable, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { LineGraph } from 'react-native-graph';
 import type { GraphPoint } from 'react-native-graph';
 
@@ -7,12 +7,6 @@ type SalesGraphProps = {
   labels: string[];
   datasets: number[];
 };
-
-interface SelectedData {
-  value: number;
-  index: number;
-  label: string;
-}
 
 export function SalesGraph({ labels, datasets }: SalesGraphProps) {
   const [points, setPoints] = useState<GraphPoint[]>([]);
@@ -109,7 +103,9 @@ export function SalesGraph({ labels, datasets }: SalesGraphProps) {
   return (
     <View className="my-4 rounded-lg bg-white py-4 pt-4 shadow-md">
       <View className="p-1">
-        <Text className="mb-2 font-bold text-center text-xl text-gray-500">Sales Count History</Text>
+        <Text className="mb-2 text-center text-xl font-bold text-gray-500">
+          Sales Count History
+        </Text>
       </View>
 
       <View style={styles.graphContainerWithAxes}>
@@ -127,7 +123,6 @@ export function SalesGraph({ labels, datasets }: SalesGraphProps) {
       </View>
 
       <BottomAxisLabel />
-
     </View>
   );
 }

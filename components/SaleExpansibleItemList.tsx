@@ -1,18 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  FlatList,
-  RefreshControlProps,
-  ListRenderItem,
-} from 'react-native';
-import Collapsible from 'react-native-collapsible';
+import { View, Text, ActivityIndicator, FlatList, RefreshControlProps } from 'react-native';
 
+import SaleItem from '~/components/SalesExpansibleItem';
 import { useSales } from '~/contexts/SalesContext';
-
-import SaleItem from '~/components/SalesExpansibleItem'
 
 interface SaleExpansibleItemType {
   id: number;
@@ -48,7 +38,6 @@ export default function SaleExpansibleItemList({
 
   useEffect(() => {
     try {
-
       // Transform to SaleExpansibleItemType format
       const formattedItems = [...sales].map((sale) => ({
         id: sale.id,

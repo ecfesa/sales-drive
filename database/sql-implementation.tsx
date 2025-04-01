@@ -250,7 +250,6 @@ export const CategoryRepository = {
  * - delete: Removes sale and related records
  */
 export const SaleRepository = {
-
   create: async (saleData: { date?: string; items: CartItem[] }): Promise<number> => {
     const database = getDatabase();
     let saleId = 0;
@@ -274,10 +273,9 @@ export const SaleRepository = {
         }
 
         // Insert sale with the specified date
-        const saleResult = await database.runAsync(
-          'INSERT INTO Sales (date) VALUES (?)',
-          [sqlDate]
-        );
+        const saleResult = await database.runAsync('INSERT INTO Sales (date) VALUES (?)', [
+          sqlDate,
+        ]);
         saleId = saleResult.lastInsertRowId as number;
 
         // Process each item
@@ -449,7 +447,7 @@ export const debugDatabase = {
       // First get all products to map IDs to names
       const products = await database.getAllAsync('SELECT id, name FROM Products');
       const productMap = {};
-      products.forEach(p => productMap[p.id] = p.name);
+      products.forEach((p) => (productMap[p.id] = p.name));
 
       const data = {
         categories: await database.getAllAsync('SELECT * FROM Categories'),
@@ -475,11 +473,14 @@ export const debugDatabase = {
       // Format the sales with product names
       const formatSaleItems = (itemsString) => {
         if (!itemsString) return 'none';
-        return itemsString.split('; ').map(item => {
-          const [productId, quantity] = item.split(':');
-          const productName = productMap[productId] || `Unknown Product (ID: ${productId})`;
-          return `${productName} (Qty: ${quantity})`;
-        }).join('\n    ');
+        return itemsString
+          .split('; ')
+          .map((item) => {
+            const [productId, quantity] = item.split(':');
+            const productName = productMap[productId] || `Unknown Product (ID: ${productId})`;
+            return `${productName} (Qty: ${quantity})`;
+          })
+          .join('\n    ');
       };
 
       // Format the data into a pretty string
@@ -488,16 +489,16 @@ export const debugDatabase = {
 Generated at: ${new Date().toLocaleString()}
 
 === CATEGORIES (${data.categories.length}) ===
-${data.categories.map(c => `• ${c.id}: ${c.name}`).join('\n') || 'No categories'}
+${data.categories.map((c) => `• ${c.id}: ${c.name}`).join('\n') || 'No categories'}
 
 === PRODUCTS (${data.products.length}) ===
-${data.products.map(p => `• ${p.id}: ${p.name} (${p.price}) - Category: ${p.categoryName}`).join('\n') || 'No products'}
+${data.products.map((p) => `• ${p.id}: ${p.name} (${p.price}) - Category: ${p.categoryName}`).join('\n') || 'No products'}
 
 === SALES (${data.sales.length}) ===
-${data.sales.map(s => `• ${s.id}: ${s.date}\n Items:\n    ${formatSaleItems(s.items)}`).join('\n\n') || 'No sales'}
+${data.sales.map((s) => `• ${s.id}: ${s.date}\n Items:\n    ${formatSaleItems(s.items)}`).join('\n\n') || 'No sales'}
 
 === PRODUCT SALES (${data.productSales.length}) ===
-${data.productSales.map(ps => `• Sale ${ps.saleId}: ${ps.productName} (Qty: ${ps.quantity})`).join('\n') || 'No product sales'}
+${data.productSales.map((ps) => `• Sale ${ps.saleId}: ${ps.productName} (Qty: ${ps.quantity})`).join('\n') || 'No product sales'}
 `;
 
       return prettyData;

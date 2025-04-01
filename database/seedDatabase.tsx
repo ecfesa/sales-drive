@@ -1,5 +1,12 @@
-import { CategoryRepository, ProductRepository, SaleRepository, resetDatabase } from './sql-implementation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import {
+  CategoryRepository,
+  ProductRepository,
+  SaleRepository,
+  resetDatabase,
+} from './sql-implementation';
+
 import productsToCreate from '~/mock/seedProducts';
 import salesToCreate from '~/mock/seedSales';
 
@@ -7,11 +14,11 @@ import salesToCreate from '~/mock/seedSales';
 // Database Seeding Module
 // ======================
 
-var logOutput = ""; // This will accumulate all log messages
+let logOutput = ''; // This will accumulate all log messages
 
 const addToLog = (message: string) => {
-    logOutput += `${message}\n`; // Add to our return string
-  };
+  logOutput += `${message}\n`; // Add to our return string
+};
 
 /**
  * Populates the database with initial sample data including:
@@ -24,11 +31,10 @@ const addToLog = (message: string) => {
  */
 export const seedDatabase = async () => {
   try {
-
     // ======================
     // 1. Category Seeding
     // ======================
-    addToLog("📁 Seeding categories...");
+    addToLog('📁 Seeding categories...');
     const categoryNames = ['Bread', 'Pastry', 'Dessert'];
     const categoryIds = [];
 
@@ -42,7 +48,7 @@ export const seedDatabase = async () => {
     // ======================
     // 2. Product Creation
     // ======================
-    addToLog("🍞 Seeding products...");
+    addToLog('🍞 Seeding products...');
     const productIds: number[] = [];
 
     for (const [index, product] of productsToCreate.entries()) {
@@ -64,7 +70,7 @@ export const seedDatabase = async () => {
     // ======================
     // 3. Sales Creation
     // ======================
-    addToLog("💰 Seeding sales...");
+    addToLog('💰 Seeding sales...');
     const saleIds: number[] = [];
 
     for (const [index, sale] of salesToCreate.entries()) {
@@ -80,10 +86,12 @@ export const seedDatabase = async () => {
         saleIds.push(id);
 
         // Format sale items for display
-        const itemsFormatted = sale.items.map(item => {
-          const product = productsToCreate.find(p => p.id === item.productId);
-          return `${product?.name || 'Unknown'} (Qty: ${item.quantity})`;
-        }).join(', ');
+        const itemsFormatted = sale.items
+          .map((item) => {
+            const product = productsToCreate.find((p) => p.id === item.productId);
+            return `${product?.name || 'Unknown'} (Qty: ${item.quantity})`;
+          })
+          .join(', ');
 
         addToLog(`   ✔ [${index + 1}/${salesToCreate.length}] ${sale.date} (ID: ${id})`);
         addToLog(`      Items: ${itemsFormatted}`);
@@ -96,15 +104,15 @@ export const seedDatabase = async () => {
     // ======================
     // 4. Completion
     // ======================
-    addToLog("\n🎉 Database seeding completed successfully!");
-    addToLog("====================================");
+    addToLog('\n🎉 Database seeding completed successfully!');
+    addToLog('====================================');
     addToLog(`📊 Summary:`);
     addToLog(`   - Categories: ${categoryIds.length}`);
     addToLog(`   - Products: ${productIds.length}`);
     addToLog(`   - Sales: ${saleIds.length}`);
     addToLog(`   - First product ID: ${productIds[0]}`);
     addToLog(`   - Last sale ID: ${saleIds[saleIds.length - 1]}`);
-    addToLog("====================================\n");
+    addToLog('====================================\n');
 
     // Mark as seeded in async storage
     await AsyncStorage.setItem('databaseSeeded', 'true');
@@ -115,17 +123,17 @@ export const seedDatabase = async () => {
       counts: {
         categories: categoryIds.length,
         products: productIds.length,
-        sales: saleIds.length
-      }
+        sales: saleIds.length,
+      },
     };
   } catch (error) {
-    addToLog("\n🔥 Seeding failed - rolling back changes...");
+    addToLog('\n🔥 Seeding failed - rolling back changes...');
     await resetDatabase();
 
     return {
       success: false,
       logs: logOutput,
-      error: error.message
+      error: error.message,
     };
   }
 };
