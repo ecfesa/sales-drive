@@ -15,8 +15,6 @@ interface SelectedData {
 }
 
 export function SalesGraph({ labels, datasets }: SalesGraphProps) {
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedData, setSelectedData] = useState<SelectedData | null>(null);
   const [points, setPoints] = useState<GraphPoint[]>([]);
 
   useEffect(() => {
@@ -69,55 +67,6 @@ export function SalesGraph({ labels, datasets }: SalesGraphProps) {
     }
   }, [datasets, labels]);
 
-  const handlePointSelected = (point: GraphPoint) => {
-    // We need to find the closest original data point
-    // since we've added intermediate points
-    if (points.length === 0 || datasets.length === 0) return;
-
-    // Find the point with the closest timestamp
-    let closestIndex = 0;
-    let minTimeDiff = Number.MAX_VALUE;
-
-    for (let i = 0; i < points.length; i++) {
-      const timeDiff = Math.abs(points[i].date.getTime() - point.date.getTime());
-      if (timeDiff < minTimeDiff) {
-        minTimeDiff = timeDiff;
-        closestIndex = i;
-      }
-    }
-
-    // Calculate the original data index
-    // For each original point, we add 3 intermediate points (so 4 total per segment)
-    // We need to calculate which original point this is closest to
-    const segmentIndex = Math.floor(closestIndex / 4);
-    const remainingPoints = closestIndex % 4;
-
-    // If remainingPoints is 0, it's an original point
-    // If it's 1, 2, or 3, it's one of the intermediate points
-    // and we need to decide which original point to map it to
-    let originalIndex;
-
-    if (remainingPoints < 2) {
-      // Closer to the earlier point
-      originalIndex = segmentIndex;
-    } else {
-      // Closer to the later point
-      originalIndex = segmentIndex + 1;
-    }
-
-    // Make sure the index is within bounds
-    const boundedIndex = Math.min(Math.max(0, originalIndex), labels.length - 1);
-
-    if (boundedIndex >= 0 && boundedIndex < labels.length) {
-      setSelectedData({
-        value: datasets[boundedIndex],
-        index: boundedIndex,
-        label: labels[boundedIndex],
-      });
-      setModalVisible(true);
-    }
-  };
-
   // Custom Axis label components
   const BottomAxisLabel = () => {
     return (
@@ -160,7 +109,7 @@ export function SalesGraph({ labels, datasets }: SalesGraphProps) {
   return (
     <View className="my-4 rounded-lg bg-white py-4 pt-4 shadow-md">
       <View className="p-1">
-        <Text className="mb-2 text-center text-xs text-gray-500">Sales Count History</Text>
+        <Text className="mb-2 font-bold text-center text-xl text-gray-500">Sales Count History</Text>
       </View>
 
       <View style={styles.graphContainerWithAxes}>
@@ -172,7 +121,6 @@ export function SalesGraph({ labels, datasets }: SalesGraphProps) {
             points={points}
             animated
             enablePanGesture
-            onPointSelected={handlePointSelected}
             color="#007AFF"
           />
         </View>
@@ -180,30 +128,6 @@ export function SalesGraph({ labels, datasets }: SalesGraphProps) {
 
       <BottomAxisLabel />
 
-      <Modal
-        animationType="fade"
-        transparent
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}>
-        <Pressable
-          className="flex-1 items-center justify-center bg-black/50"
-          onPress={() => setModalVisible(false)}>
-          <Pressable className="w-3/4 rounded-2xl bg-white p-6">
-            {selectedData && (
-              <>
-                <Text className="mb-2 text-lg font-bold">Sales of this Day:</Text>
-                <Text className="mb-1">Date: {selectedData.label}</Text>
-                <Text className="mb-1">Value: {selectedData.value}</Text>
-              </>
-            )}
-            <TouchableOpacity
-              className="mt-4 self-end rounded-lg bg-blue-500 px-4 py-2"
-              onPress={() => setModalVisible(false)}>
-              <Text className="text-white">Close</Text>
-            </TouchableOpacity>
-          </Pressable>
-        </Pressable>
-      </Modal>
     </View>
   );
 }

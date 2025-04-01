@@ -24,8 +24,12 @@ export default function Sales() {
       const reversedData = [...dailySalesCount].reverse();
 
       const newLabels = reversedData.map((item) => {
-        const [, month, day] = item.date.split('-');
-        return `${day}/${month}`;
+        // Extract date part (before the space) and split into components
+        const [datePart] = item.date.split(' ');
+        const [, month, day] = datePart.split('-');
+
+        // Format as DD/MM (with proper padding)
+        return `${day.padStart(2, '0')}/${month.padStart(2, '0')}`;
       });
 
       const newData = reversedData.map((item) => item.count);
@@ -46,6 +50,10 @@ export default function Sales() {
   const renderHeader = useCallback(
     () => (
       <>
+        <Text className="mb-1 mt-1 rounded-lg border border-dashed border-indigo-500 bg-blue-100 p-2.5 text-center text-4xl font-bold">
+          Graphical View
+        </Text>
+
         {loading && !refreshing ? (
           <View className="h-40 items-center justify-center">
             <Text>Loading sales data...</Text>
@@ -54,8 +62,8 @@ export default function Sales() {
           <SalesGraph labels={labels} datasets={data} />
         )}
 
-        <Text className="mb-1 mt-1 rounded-lg border border-dashed border-blue-500 bg-blue-100 p-2.5 text-center text-4xl font-bold">
-          Last Sales
+        <Text className="mb-3 mt-1 rounded-lg border border-dashed border-indigo-500 bg-blue-100 p-2.5 text-center text-4xl font-bold">
+          Listing Sales
         </Text>
       </>
     ),

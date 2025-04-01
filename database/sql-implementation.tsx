@@ -54,7 +54,7 @@ export const initDatabase = () => {
 
     CREATE TABLE IF NOT EXISTS Sales (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      date TEXT NOT NULL
+      date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS ProductSale (
@@ -250,17 +250,37 @@ export const CategoryRepository = {
  * - delete: Removes sale and related records
  */
 export const SaleRepository = {
-  create: async (saleData: { date: string; items: CartItem[] }): Promise<number> => {
+
+  create: async (saleData: { date?: string; items: CartItem[] }): Promise<number> => {
     const database = getDatabase();
-    let saleId = 0; // Initialize with a default value
+    let saleId = 0;
 
     try {
       await database.withTransactionAsync(async () => {
-        const saleResult = await database.runAsync('INSERT INTO Sales (date) VALUES (?)', [
-          saleData.date,
-        ]);
+        // Normalize the date string to SQL datetime format
+        let sqlDate: string;
+
+        if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(saleData.date)) {
+          // Format: YYYY-MM-DD
+          const [year, month, day] = saleData.date.split('-');
+          sqlDate = `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')} 00:00:00`;
+        } else if (/^\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{2}:\d{2}$/.test(saleData.date)) {
+          // Format: YYYY-MM-DD HH:MM:SS
+          const [datePart, timePart] = saleData.date.split(' ');
+          const [year, month, day] = datePart.split('-');
+          sqlDate = `${year.padStart(4, '0')}-${month.padStart(2, '0')}-${day.padStart(2, '0')} ${timePart}`;
+        } else {
+          throw new Error('Invalid date format. Use YYYY-MM-DD or YYYY-MM-DD HH:MM:SS');
+        }
+
+        // Insert sale with the specified date
+        const saleResult = await database.runAsync(
+          'INSERT INTO Sales (date) VALUES (?)',
+          [sqlDate]
+        );
         saleId = saleResult.lastInsertRowId as number;
 
+        // Process each item
         for (const item of saleData.items) {
           if (!(await ProductRepository.getById(item.productId))) {
             throw new Error(`Invalid product ID: ${item.productId}`);
@@ -274,7 +294,7 @@ export const SaleRepository = {
       });
       return saleId;
     } catch (error) {
-      throw error; // Or handle the error as needed
+      throw error;
     }
   },
 
@@ -327,7 +347,7 @@ export const SaleRepository = {
              FROM ProductSale ps
              JOIN Products p ON ps.productId = p.id
              WHERE ps.saleId = ?
-             `,
+             ORDER BY ps.saleId DESC`,
             [sale.id]
           );
 
@@ -353,16 +373,15 @@ export const SaleRepository = {
     try {
       const results = await database.getAllAsync<{ date: string; count: number }>(
         `SELECT
-          date,
+          DATE(date) as date,
           COUNT(id) as count
         FROM
           Sales
         GROUP BY
-          date
+          DATE(date)
         ORDER BY
           date DESC
-        LIMIT 7
-          `
+        LIMIT 7`
       );
       return results;
     } catch (error) {
@@ -427,6 +446,11 @@ export const debugDatabase = {
   printAllData: async () => {
     const database = getDatabase();
     try {
+      // First get all products to map IDs to names
+      const products = await database.getAllAsync('SELECT id, name FROM Products');
+      const productMap = {};
+      products.forEach(p => productMap[p.id] = p.name);
+
       const data = {
         categories: await database.getAllAsync('SELECT * FROM Categories'),
         products: await database.getAllAsync(`
@@ -448,13 +472,38 @@ export const debugDatabase = {
         `),
       };
 
-      console.log('DATABASE CONTENTS:');
-      console.log('Categories:', JSON.stringify(data.categories, null, 2));
-      console.log('Products:', JSON.stringify(data.products, null, 2));
-      console.log('Sales:', JSON.stringify(data.sales, null, 2));
-      console.log('Product Sales:', JSON.stringify(data.productSales, null, 2));
+      // Format the sales with product names
+      const formatSaleItems = (itemsString) => {
+        if (!itemsString) return 'none';
+        return itemsString.split('; ').map(item => {
+          const [productId, quantity] = item.split(':');
+          const productName = productMap[productId] || `Unknown Product (ID: ${productId})`;
+          return `${productName} (Qty: ${quantity})`;
+        }).join('\n    ');
+      };
+
+      // Format the data into a pretty string
+      const prettyData = `
+=== DATABASE DUMP ===
+Generated at: ${new Date().toLocaleString()}
+
+=== CATEGORIES (${data.categories.length}) ===
+${data.categories.map(c => `• ${c.id}: ${c.name}`).join('\n') || 'No categories'}
+
+=== PRODUCTS (${data.products.length}) ===
+${data.products.map(p => `• ${p.id}: ${p.name} (${p.price}) - Category: ${p.categoryName}`).join('\n') || 'No products'}
+
+=== SALES (${data.sales.length}) ===
+${data.sales.map(s => `• ${s.id}: ${s.date}\n Items:\n    ${formatSaleItems(s.items)}`).join('\n\n') || 'No sales'}
+
+=== PRODUCT SALES (${data.productSales.length}) ===
+${data.productSales.map(ps => `• Sale ${ps.saleId}: ${ps.productName} (Qty: ${ps.quantity})`).join('\n') || 'No product sales'}
+`;
+
+      return prettyData;
     } catch (error) {
       console.log('Failed to print database contents:', error);
+      return `Error generating database dump: ${error.message}`;
     }
   },
 };

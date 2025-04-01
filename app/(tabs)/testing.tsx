@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, Button } from 'react-native';
+import { View, Text, ScrollView, Button, TouchableOpacity } from 'react-native';
 
 import { seedDatabase } from '../../database/seedDatabase';
 import {
@@ -83,9 +83,20 @@ const TestingScreen = () => {
   // Sale CRUD Tests
   const testSaleCRUD = async () => {
     try {
-      // Create
+      //Create
+      const now = new Date();
+      const formattedDate = [
+        now.getFullYear(),
+        String(now.getMonth() + 1).padStart(2, '0'),
+        String(now.getDate()).padStart(2, '0'),
+      ].join('-') + ' ' + [
+        String(now.getHours()).padStart(2, '0'),
+        String(now.getMinutes()).padStart(2, '0'),
+        String(now.getSeconds()).padStart(2, '0'),
+      ].join(':');
+
       const newId = await SaleRepository.create({
-        date: new Date().toISOString(),
+        date: formattedDate,
         items: [
           { productId: 1, quantity: 2 },
           { productId: 2, quantity: 1 },
@@ -138,6 +149,12 @@ const TestingScreen = () => {
   const handleResetDatabase = async () => {
     try {
       await resetDatabase();
+
+      const formattedData = await debugDatabase.printAllData();
+
+      const lines = formattedData.split('\n').reverse();
+      lines.forEach(line => addLog(line));
+
       addLog('Database reset complete');
       setTestProductId(null);
       setTestCategoryId(null);
@@ -147,50 +164,142 @@ const TestingScreen = () => {
     }
   };
 
+  const handlePrintDatabase = async () => {
+    try {
+      addLog("Fetching database contents...");
+
+      const formattedData = await debugDatabase.printAllData();
+
+      // Split the formatted data into lines and add each one to the log
+      const lines = formattedData.split('\n').reverse();
+      lines.forEach(line => addLog(line));
+
+      addLog("Finished printing database contents...");
+
+    } catch (error) {
+      addLog(`Error printing database: ${error.message}`);
+    }
+  };
+
+  const handleSeedDatabase = async () => {
+  try {
+    addLog("🌱 Starting database seeding process...");
+    addLog("====================================");
+
+    const seedingResult = await seedDatabase();
+
+    if (seedingResult.success) {
+      addLog(seedingResult.logs);
+    } else {
+      addLog("Failed:", seedingResult.error);
+    }
+
+    addLog("====================================");
+    addLog("🌱 Seeding Finished!!!");
+
+  } catch (error) {
+    addLog(`❌ Seeding failed: ${error.message}`);
+  }
+};
+
+  const handleClearLogs = () => {
+  setLogs([]);
+};
   return (
-    <ScrollView contentContainerStyle={{ padding: 20 }}>
-      <Text style={{ fontSize: 20, marginBottom: 10 }}>Database Testing</Text>
+    <ScrollView contentContainerStyle={{ padding: 20 }} className="bg-gray-50">
+      <Text className="text-2xl font-bold text-indigo-800 mb-4">Database Testing</Text>
 
       {/* Product Tests */}
-      <View style={{ marginBottom: 15 }}>
-        <Text style={{ fontWeight: 'bold' }}>Product Tests</Text>
-        <Button title="Test Product CRUD" onPress={testProductCRUD} />
-        <Button title="Get All Products" onPress={testGetAllProducts} />
+      <View className="mb-6 p-4 bg-white rounded-lg shadow-sm border border-indigo-100">
+        <Text className="text-lg font-semibold text-indigo-700 mb-3">Product Tests</Text>
+        <View className="space-y-2">
+          <Button
+            title="Test Product CRUD"
+            onPress={testProductCRUD}
+            color="#4f46e5"
+          />
+          <Button
+            title="Get All Products"
+            onPress={testGetAllProducts}
+            color="#6366f1"
+          />
+        </View>
       </View>
 
       {/* Category Tests */}
-      <View style={{ marginBottom: 15 }}>
-        <Text style={{ fontWeight: 'bold' }}>Category Tests</Text>
-        <Button title="Test Category CRUD" onPress={testCategoryCRUD} />
-        <Button title="Get All Categories" onPress={testGetAllCategories} />
+      <View className="mb-6 p-4 bg-white rounded-lg shadow-sm border border-indigo-100">
+        <Text className="text-lg font-semibold text-indigo-700 mb-3">Category Tests</Text>
+        <View className="space-y-2">
+          <Button
+            title="Test Category CRUD"
+            onPress={testCategoryCRUD}
+            color="#4f46e5"
+          />
+          <Button
+            title="Get All Categories"
+            onPress={testGetAllCategories}
+            color="#6366f1"
+          />
+        </View>
       </View>
 
       {/* Sale Tests */}
-      <View style={{ marginBottom: 15 }}>
-        <Text style={{ fontWeight: 'bold' }}>Sale Tests</Text>
-        <Button title="Test Sale CRUD" onPress={testSaleCRUD} />
-        <Button title="Get All Sales" onPress={testGetAllSales} />
+      <View className="mb-6 p-4 bg-white rounded-lg shadow-sm border border-indigo-100">
+        <Text className="text-lg font-semibold text-indigo-700 mb-3">Sale Tests</Text>
+        <View className="space-y-2">
+          <Button
+            title="Test Sale CRUD"
+            onPress={testSaleCRUD}
+            color="#4f46e5"
+          />
+          <Button
+            title="Get All Sales"
+            onPress={testGetAllSales}
+            color="#6366f1"
+          />
+        </View>
       </View>
 
       {/* Utilities */}
-      <View style={{ marginBottom: 15 }}>
-        <Text style={{ fontWeight: 'bold' }}>Utilities</Text>
-        <Button
-          title="Seed Database"
-          onPress={() => seedDatabase().then(() => addLog('Database seeded'))}
-        />
-        <Button title="Reset Database" onPress={handleResetDatabase} />
-        <Button title="Print Database" onPress={() => debugDatabase.printAllData()} />
+      <View className="mb-6 p-4 bg-white rounded-lg shadow-sm border border-indigo-100">
+        <Text className="text-lg font-semibold text-indigo-700 mb-3">Utilities</Text>
+        <View className="space-y-2">
+          <Button
+            title="Seed Database"
+            onPress={handleSeedDatabase}
+            color="#7c3aed"
+          />
+          <Button
+            title="Reset Database"
+            onPress={handleResetDatabase}
+            color="#8b5cf6"
+          />
+          <Button
+            title="Print Database"
+            onPress={handlePrintDatabase}
+            color="#a78bfa"
+          />
+        </View>
       </View>
 
       {/* Logs */}
-      <View style={{ marginTop: 20 }}>
-        <Text style={{ fontWeight: 'bold' }}>Logs:</Text>
-        {logs.map((log, index) => (
-          <Text key={index} style={{ fontSize: 10, color: '#666' }}>
-            {log}
-          </Text>
-        ))}
+      <View className="mt-6 p-4 bg-white rounded-lg shadow-sm border border-indigo-100">
+        <View className="flex-row justify-between items-center mb-3">
+          <Text className="text-lg font-semibold text-indigo-700">Logs:</Text>
+          <TouchableOpacity
+            onPress={handleClearLogs}
+            className="px-3 py-1 bg-indigo-100 rounded-md"
+          >
+            <Text className="text-indigo-600 text-sm font-medium">Clear</Text>
+          </TouchableOpacity>
+        </View>
+        <View className="space-y-1">
+          {logs.map((log, index) => (
+            <Text key={index} className="text-xs text-gray-600 font-mono">
+              {log}
+            </Text>
+          ))}
+        </View>
       </View>
     </ScrollView>
   );

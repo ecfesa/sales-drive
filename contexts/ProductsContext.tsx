@@ -66,8 +66,19 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
 
   const confirmPurchase = () => {
     if (cart.items.length > 0) {
+      const now = new Date();
+      const formattedDate = [
+        now.getFullYear(),
+        String(now.getMonth() + 1).padStart(2, '0'),
+        String(now.getDate()).padStart(2, '0'),
+      ].join('-') + ' ' + [
+        String(now.getHours()).padStart(2, '0'),
+        String(now.getMinutes()).padStart(2, '0'),
+        String(now.getSeconds()).padStart(2, '0'),
+      ].join(':');
+
       SaleRepository.create({
-        date: new Date().toISOString().split('T')[0], // yyyy-mm-dd format
+        date: formattedDate,  // '2024-03-15 14:30:45'
         items: cart.items,
       });
     }
