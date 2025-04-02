@@ -55,7 +55,7 @@ const ProductHeader = memo(({  }) => {
           <Pressable onPress={handleTitlePress}>
             <Text className="text-2xl">Products</Text>
           </Pressable>
-          {isAdminMode && hasProducts && (
+          {isAdminMode && hasProducts && (path == '/' || path.includes('id')) && (
             <Pressable
               onPress={toggleEditMode}
               className="ml-2 w-36 flex-row items-center gap-1 px-2 py-1">
