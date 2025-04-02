@@ -8,6 +8,7 @@ type SalesDriveContextType = {
   products: Product[];
   loading: boolean;
   isAdminMode: boolean;
+
   newProduct: (product: Product) => Promise<number>;
   updateProduct: (product: Product) => void;
   updateProductWithNewCategory: (product: Product, categoryName: string) => void;

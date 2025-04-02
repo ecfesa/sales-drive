@@ -25,7 +25,7 @@ type ProductSection = {
 
 export default function Products() {
   const router = useRouter();
-  const { editMode, addToCart } = useProducts();
+  const { editMode, setEditMode, addToCart } = useProducts();
   const [refreshing, setRefreshing] = useState(false);
 
   const { products, loading: initialLoading, deleteProduct, reloadProducts, isAdminMode } = useSalesDrive();
@@ -102,6 +102,7 @@ export default function Products() {
   );
 
   const handleCreateFirstProduct = () => {
+    setEditMode(true);
     router.push('/new');
   };
 
