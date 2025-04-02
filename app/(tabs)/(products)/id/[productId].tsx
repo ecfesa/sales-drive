@@ -172,7 +172,7 @@ export default function ProductDetails() {
         allowsEditing: true,
         aspect: [1, 1], // 1:1 crop aspect ratio
         quality: 0.8,
-        base64: true, // Get base64 for hashing
+        base64: true,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {

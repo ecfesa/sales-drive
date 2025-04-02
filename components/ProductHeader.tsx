@@ -1,6 +1,6 @@
 import { AntDesign } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import React, { useEffect, useCallback, useMemo } from 'react';
+import { router, usePathname, useRouter } from 'expo-router';
+import { useEffect, useCallback, memo, useMemo } from 'react';
 import { Text, View, Pressable } from 'react-native';
 
 import BlankHeader from '~/components/BlankHeader';
@@ -8,9 +8,11 @@ import CartButton from '~/components/CartButton';
 import { useProducts } from '~/contexts/ProductsContext';
 import { useSalesDrive } from '~/contexts/SalesDriveContext';
 
-const ProductHeader = React.memo(() => {
+const ProductHeader = memo(({  }) => {
   const { editMode, toggleEditMode, setEditMode, getCartItemCount } = useProducts();
   const { isAdminMode, adminClickReceived, products } = useSalesDrive();
+
+  const path = usePathname();
 
   // Turn off edit mode whenever admin mode is disabled
   useEffect(() => {
@@ -66,7 +68,7 @@ const ProductHeader = React.memo(() => {
         </View>
       </View>
 
-      {editMode ? (
+      {editMode && path == '/' ? (
         <Pressable
           onPress={handleAddProduct}
           className="flex-row items-center gap-2 rounded-full border-2 border-green-600 bg-green-100 px-3 py-1 transition-opacity active:opacity-50">
