@@ -28,7 +28,7 @@ export default function Products() {
   const { editMode, addToCart } = useProducts();
   const [refreshing, setRefreshing] = useState(false);
 
-  const { products, loading: initialLoading, deleteProduct, reloadProducts } = useSalesDrive();
+  const { products, loading: initialLoading, deleteProduct, reloadProducts, isAdminMode } = useSalesDrive();
   const [productsByCategory, setProductsByCategory] = useState<ProductSection[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -106,7 +106,7 @@ export default function Products() {
   };
 
   // Show "Create first product" button when no products exist
-  if (products.length === 0) {
+  if (products.length === 0 && isAdminMode) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center p-4">
         <Text className="mb-6 text-center text-2xl">No products found</Text>
