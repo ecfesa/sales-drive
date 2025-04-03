@@ -21,7 +21,8 @@ export default function Sales() {
     // Process the dailySalesCount data
     if (dailySalesCount.length > 0) {
       // Reverse the order to display oldest to newest
-      const reversedData = [...dailySalesCount].reverse();
+      let reversedData = [...dailySalesCount];
+      reversedData = reversedData.reverse();
 
       const newLabels = reversedData.map((item) => {
         // Extract date part (before the space) and split into components
