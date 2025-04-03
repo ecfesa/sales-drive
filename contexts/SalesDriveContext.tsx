@@ -1,3 +1,4 @@
+import { useFocusEffect } from 'expo-router';
 import { createContext, useContext, ReactNode, useState, useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
 
@@ -34,14 +35,14 @@ export function SalesDriveProvider({ children }: SalesDriveProviderProps) {
   const clickTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load data from database
-  useEffect(() => {
+  useFocusEffect(() => {
     const loadProducts = async () => {
       const products = await ProductRepository.getAll();
       setProducts(products);
       setLoading(false);
     };
     loadProducts();
-  }, []);
+  });
 
   // Cleanup click timer (dismount detector)
   useEffect(() => {

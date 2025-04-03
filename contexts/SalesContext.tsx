@@ -1,3 +1,4 @@
+import { useFocusEffect } from 'expo-router';
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 import { SaleRepository } from '~/database/sql-implementation';
@@ -23,9 +24,9 @@ export function SalesProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   // Load sales data on component mount
-  useEffect(() => {
+  useFocusEffect(() => {
     refreshSales();
-  }, []);
+  });
 
   const refreshSales = async () => {
     setLoading(true);
